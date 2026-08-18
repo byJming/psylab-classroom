@@ -1,8 +1,9 @@
 {
-  "name": "psylab",
-  "version": "1.0.0",
+  "name": "psylab-classroom",
+  "version": "0.1.0-beta",
   "private": true,
   "license": "Apache-2.0",
+  "author": "ming <woqiang0610@163.com>",
   "type": "module",
   "scripts": {
     "dev": "vite",

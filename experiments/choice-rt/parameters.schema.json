@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://psylab.example/experiments/choice-rt/parameters.schema.json",
+  "title": "Choice RT 选择反应时参数",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "practiceTrials": {
+      "type": "integer",
+      "title": "练习 trial",
+      "description": "用于熟悉颜色与按键映射；不进入正式摘要。",
+      "default": 4,
+      "minimum": 4,
+      "maximum": 16
+    },
+    "testTrials": {
+      "type": "integer",
+      "title": "正式 trial",
+      "description": "2 选 1 与 4 选 1 条件尽可能平衡的正式 trial 总数。",
+      "default": 24,
+      "minimum": 12,
+      "maximum": 120,
+      "multipleOf": 6
+    },
+    "responseWindowMs": {
+      "type": "integer",
+      "title": "响应窗（毫秒）",
+      "description": "可选：彩色圆点出现后等待按键的时长。",
+      "minimum": 500,
+      "maximum": 6000
+    }
+  },
+  "required": ["practiceTrials", "testTrials"],
+  "x-psylab": {
+    "preset": "public-short",
+    "estimatedDurationMinutes": { "min": 4, "max": 10 },
+    "responseMode": "f-g-j-k",
+    "balanceRules": ["set-2=set-4", "setSize×color-cell-balanced"],
+    "qualityRules": ["incorrect", "no-response", "anticipation", "focus-loss"]
+  }
+}

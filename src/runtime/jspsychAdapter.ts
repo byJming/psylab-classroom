@@ -1,5 +1,5 @@
 import type { TrialPlan } from "../types";
-import { mentalRotationSvgMarkup } from "../experiments/stimuli";
+import { choiceCircleMarkup, flankerArrowsMarkup, mentalRotationSvgMarkup, simonCircleMarkup, visualSearchSvgMarkup } from "../experiments/stimuli";
 
 export type JsPsychTrialRole = "delay" | "response";
 
@@ -40,6 +40,8 @@ function safeColor(value: unknown): string {
 
 function responseKeys(plan: TrialPlan): string[] {
   if (plan.data.targetType === "go" || plan.data.targetType === "no-go") return [" "];
+  // 选择反应等多键范式把允许按键以 "f|g|j|k" 形式写入试次数据，随结果包导出可审计。
+  if (typeof plan.data.responseKeys === "string") return plan.data.responseKeys.split("|");
   if (plan.data.responseKey === "f" || plan.data.responseKey === "j" || plan.data.responseKey === "k") return ["f", "j", "k"];
   if (plan.correctResponse === " ") return [" "];
   return ["f", "j"];
@@ -47,8 +49,12 @@ function responseKeys(plan: TrialPlan): string[] {
 
 function stimulusMarkup(plan: TrialPlan): string {
   if (plan.data.stimulusType === "corner-blocks") return mentalRotationSvgMarkup(Number(plan.data.angle), Boolean(plan.data.same));
+  if (plan.data.stimulusType === "choice-circle") return choiceCircleMarkup(plan.data.color);
+  if (plan.data.stimulusType === "flanker-arrows") return flankerArrowsMarkup(plan.data.direction === "left", plan.data.flankerCompatible === true);
+  if (plan.data.stimulusType === "simon-circle") return simonCircleMarkup(plan.data.position === "left", plan.data.color);
+  if (plan.data.stimulusType === "search-display") return visualSearchSvgMarkup(plan.stimulusId, String(plan.data.searchType ?? "feature"), Number(plan.data.setSize ?? 4), plan.data.targetPresent === true);
   if (plan.data.targetType === "go" || plan.data.targetType === "no-go") return `<div class="measured-shape measured-go-no-go ${plan.data.targetType === "go" ? "go" : "no-go"}" aria-hidden="true"></div>`;
-  if (plan.data.color) return `<div class="measured-word" style="color:${safeColor(plan.data.color)}">${escapeHtml(plan.stimulus)}</div>`;
+  if (plan.data.color && !plan.data.stimulusType) return `<div class="measured-word" style="color:${safeColor(plan.data.color)}">${escapeHtml(plan.stimulus)}</div>`;
   if (plan.stimulus === "●") return `<div class="measured-shape measured-simple-rt" aria-hidden="true"></div>`;
   return `<div class="measured-text">${escapeHtml(plan.stimulus)}</div>`;
 }

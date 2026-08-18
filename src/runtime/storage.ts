@@ -42,6 +42,21 @@ export async function deleteDraft(key: string): Promise<void> {
   memory.delete(key); const db = await openDb(); if (!db) return; await new Promise<void>((resolve) => { const tx = db.transaction(RUN_STORE, "readwrite"); tx.objectStore(RUN_STORE).delete(key); tx.oncomplete = () => resolve(); tx.onerror = () => resolve(); });
 }
 
+/** 列出所有未完成草稿，供首页提供“继续上次任务”入口；存储不可用时返回内存降级草稿。 */
+export async function listDrafts(): Promise<Array<{ key: string; draft: RunDraft }>> {
+  const db = await openDb();
+  if (!db) return [...memory.entries()].filter(([key]) => key.startsWith("draft:")).map(([key, value]) => ({ key, draft: value as RunDraft }));
+  return new Promise((resolve) => {
+    const request = db.transaction(RUN_STORE, "readonly").objectStore(RUN_STORE).getAllKeys();
+    request.onsuccess = async () => {
+      const keys = (request.result as IDBValidKey[]).filter((key): key is string => typeof key === "string" && key.startsWith("draft:"));
+      const entries = await Promise.all(keys.map((key) => loadDraft(key).then((draft) => (draft ? { key, draft } : null))));
+      resolve(entries.filter((entry): entry is { key: string; draft: RunDraft } => entry !== null));
+    };
+    request.onerror = () => resolve([]);
+  });
+}
+
 export async function saveResult(bundle: ResultBundle): Promise<boolean> {
   const db = await openDb();
   if (!db) { memory.set(`result:${LATEST_RESULT_KEY}`, bundle); return false; }

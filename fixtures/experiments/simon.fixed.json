@@ -1,0 +1,6 @@
+{
+  "experimentId": "simon",
+  "seed": "fixed-simon-v1",
+  "config": { "practiceTrials": 4, "testTrials": 24 },
+  "expected": { "practiceCount": 4, "testCount": 24, "conditions": ["compatible", "incompatible"] }
+}

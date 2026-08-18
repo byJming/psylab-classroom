@@ -4,18 +4,24 @@ import { canonicalize, sha256, sha256Fallback } from "../src/core/hash";
 import { validateDefinition, validateResult, validateSession } from "../src/core/schema";
 import { importResultFiles } from "../src/core/importer";
 import { batchSummaryCsv, batchTrialsCsv, codebookCsv, parseCsv, resultJsonFilename, summaryCsv, trialsCsv } from "../src/core/export";
-import { loadDraft, loadLatestResult, saveDraft, saveResult } from "../src/runtime/storage";
+import { deleteDraft, listDrafts, loadDraft, loadLatestResult, saveDraft, saveResult } from "../src/runtime/storage";
 import { buildResultBundle } from "../src/core/result";
 import { hasCompletedRequiredDebrief, validateRunManifest } from "../src/runtime/policy";
 import { canStartPreflight } from "../src/runtime/preflight";
 import { compileTimeline } from "../src/runtime/jspsychAdapter";
-import type { ResultBundle, TrialRecord } from "../src/types";
+import type { ResultBundle, TrialPlan, TrialRecord } from "../src/types";
 import simpleFixture from "../fixtures/experiments/simple-rt.fixed.json";
 import stroopFixture from "../fixtures/experiments/stroop-color-word.fixed.json";
 import goNoGoFixture from "../fixtures/experiments/go-no-go.fixed.json";
 import rotationFixture from "../fixtures/experiments/mental-rotation.fixed.json";
+import choiceFixture from "../fixtures/experiments/choice-rt.fixed.json";
+import flankerFixture from "../fixtures/experiments/flanker.fixed.json";
+import simonFixture from "../fixtures/experiments/simon.fixed.json";
+import searchFixture from "../fixtures/experiments/visual-search.fixed.json";
 import simpleParameters from "../experiments/simple-rt/parameters.schema.json";
 import stroopParameters from "../experiments/stroop-color-word/parameters.schema.json";
+import flankerParameters from "../experiments/flanker/parameters.schema.json";
+import searchParameters from "../experiments/visual-search/parameters.schema.json";
 
 function trial(overrides: Partial<TrialRecord> = {}): TrialRecord {
   return { trialIndex: 0, phase: "test", condition: "congruent", stimulusId: "s1", correctResponse: "f", response: "f", correct: true, rtMs: 500, stimulusDurationMs: null, visibilityState: "visible", focusLostBeforeResponse: false, excluded: false, exclusionReasons: [], data: {}, ...overrides };
@@ -28,15 +34,15 @@ function bundle(overrides: Partial<ResultBundle> = {}): ResultBundle {
 describe("契约与确定性", () => {
   it("所有 Definition 通过 JSON Schema", () => { expect(definitions.every((definition) => validateDefinition(definition).valid)).toBe(true); });
   it("每个公开实验都声明可供公众理解的主指标", () => { for (const definition of definitions.filter((item) => item.runPolicy.publicCatalog)) { expect(definition.metadata.publicMetric).toBeDefined(); const metric = definition.metadata.publicMetric!; expect(definition.metrics.some((item) => item.id === metric.id)).toBe(true); } });
-  it("黄金实验参数 schema 与 Definition 的配置边界一致", () => { expect(simpleParameters.required).toEqual(["practiceTrials", "testTrials"]); expect(stroopParameters.required).toEqual(["practiceTrials", "testTrials"]); expect((stroopParameters.properties as { testTrials: { multipleOf: number } }).testTrials.multipleOf).toBe(2); });
+  it("黄金实验参数 schema 与 Definition 的配置边界一致", () => { expect(simpleParameters.required).toEqual(["practiceTrials", "testTrials"]); expect(stroopParameters.required).toEqual(["practiceTrials", "testTrials"]); expect((stroopParameters.properties as { testTrials: { multipleOf: number } }).testTrials.multipleOf).toBe(2); expect(flankerParameters.required).toEqual(["practiceTrials", "testTrials"]); expect((flankerParameters.properties as { testTrials: { multipleOf: number } }).testTrials.multipleOf).toBe(4); expect((searchParameters.properties as { testTrials: { multipleOf: number } }).testTrials.multipleOf).toBe(8); });
   it("Definition schema 拒绝缺少教学背景和变量声明的实验包", () => { const incomplete = { ...definitions[0], metadata: { ...definitions[0].metadata, theoryBackground: "" } }; expect(validateDefinition(incomplete).valid).toBe(false); });
   it("Session 和 Result Bundle 通过 schema，旧 Result 格式被拒绝", async () => { const hash = await sha256({ testTrials: 24 }); const session = { format: "psylab-session", formatVersion: "1.0", experimentId: "simple-rt", definitionVersion: "1.0.0", distributionTier: "open", runPolicyVersion: "1.0.0", config: { testTrials: 24, practiceTrials: 3 }, configHash: hash, sessionId: "session-001", createdAt: "2026-08-18T00:00:00.000Z" }; expect(validateSession(session).valid).toBe(true); expect(validateResult(bundle()).valid).toBe(true); expect(validateResult({ ...bundle(), formatVersion: "1.0" }).valid).toBe(false); });
   it("规范化哈希忽略对象键顺序", async () => { expect(canonicalize({ b: 2, a: 1 })).toBe(canonicalize({ a: 1, b: 2 })); expect(await sha256({ b: 2, a: 1 })).toBe(await sha256({ a: 1, b: 2 })); });
   it("普通 HTTP 静态服务器的 SHA-256 fallback 与标准向量一致", () => { expect(sha256Fallback(new TextEncoder().encode("abc"))).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"); });
   it("固定种子生成稳定 trial 数和顺序", () => { const first = generateTrials("stroop-color-word", defaultConfig("stroop-color-word"), "seed"); const second = generateTrials("stroop-color-word", defaultConfig("stroop-color-word"), "seed"); expect(first).toEqual(second); expect(first.filter((plan) => plan.phase === "test")).toHaveLength(24); });
-  it("固定 fixtures 的 Definition/Runner 结构与预期一致", () => { for (const fixture of [simpleFixture, stroopFixture, goNoGoFixture, rotationFixture]) { const plans = generateTrials(fixture.experimentId, fixture.config, fixture.seed); expect(plans.filter((plan) => plan.phase === "practice")).toHaveLength(fixture.expected.practiceCount); expect(plans.filter((plan) => plan.phase === "test")).toHaveLength(fixture.expected.testCount); expect(new Set(plans.map((plan) => plan.condition)).size).toBeGreaterThan(0); } });
+  it("固定 fixtures 的 Definition/Runner 结构与预期一致", () => { for (const fixture of [simpleFixture, stroopFixture, goNoGoFixture, rotationFixture, choiceFixture, flankerFixture, simonFixture, searchFixture]) { const plans = generateTrials(fixture.experimentId, fixture.config, fixture.seed); expect(plans.filter((plan) => plan.phase === "practice")).toHaveLength(fixture.expected.practiceCount); expect(plans.filter((plan) => plan.phase === "test")).toHaveLength(fixture.expected.testCount); expect(new Set(plans.map((plan) => plan.condition)).size).toBeGreaterThan(0); } });
   it("心理旋转的同形与镜像条件呈现稳定的程序化几何刺激", () => { const plans = generateTrials("mental-rotation", rotationFixture.config, rotationFixture.seed); expect(new Set(plans.map((plan) => plan.stimulus))).toEqual(new Set(["geometry"])); expect(plans.filter((plan) => plan.condition.startsWith("same-")).every((plan) => plan.data.stimulusType === "corner-blocks" && plan.data.same === true)).toBe(true); expect(plans.filter((plan) => plan.condition.startsWith("mirror-")).every((plan) => plan.data.stimulusType === "corner-blocks" && plan.data.same === false)).toBe(true); });
-  it("四个 P0 实验都生成可解释的练习与正式 trial", () => { for (const definition of definitions) { const plans = generateTrials(definition.experimentId, defaultConfig(definition.experimentId), "fixed-fixture-seed"); expect(plans.some((plan) => plan.phase === "practice")).toBe(true); expect(plans.some((plan) => plan.phase === "test")).toBe(true); expect(plans.every((plan) => plan.stimulusId.length > 0)).toBe(true); } });
+  it("八个官方实验都生成可解释的练习与正式 trial", () => { for (const definition of definitions) { const plans = generateTrials(definition.experimentId, defaultConfig(definition.experimentId), "fixed-fixture-seed"); expect(plans.some((plan) => plan.phase === "practice")).toBe(true); expect(plans.some((plan) => plan.phase === "test")).toBe(true); expect(plans.every((plan) => plan.stimulusId.length > 0)).toBe(true); } });
   it("公开 Runner 对 open、guided 和 controlled 发布策略执行对应门禁", async () => {
     const definition = definitions[0]; const config = defaultConfig(definition.experimentId); const configHash = await sha256(config);
     const manifest = { format: "psylab-session" as const, formatVersion: "1.0", experimentId: definition.experimentId, definitionVersion: definition.definitionVersion, distributionTier: "open" as const, runPolicyVersion: definition.runPolicy.version, config, configHash, sessionId: "policy-open-01", createdAt: "2026-08-18T00:00:00.000Z" };
@@ -122,6 +128,37 @@ describe("契约与确定性", () => {
     const angleSequence = plans.filter((plan) => plan.phase === "test").map((plan) => Number(plan.data.angle));
     expect(angleSequence.slice(0, -1).some((angle, index) => angle === angleSequence[index + 1])).toBe(true);
   });
+  it("选择反应类实验的交叉单元格均衡且响应映射正确", () => {
+    const countCells = (plans: TrialPlan[], key: (plan: TrialPlan) => string) => {
+      const cells = new Map<string, number>();
+      for (const plan of plans) cells.set(key(plan), (cells.get(key(plan)) ?? 0) + 1);
+      expect(Math.max(...cells.values()) - Math.min(...cells.values())).toBeLessThanOrEqual(1);
+      return cells;
+    };
+    const choicePlans = generateTrials("choice-rt", choiceFixture.config, choiceFixture.seed).filter((plan) => plan.phase === "test");
+    expect(countCells(choicePlans, (plan) => `${plan.data.setSize}-${String(plan.data.colorName)}`).size).toBe(6);
+    expect(choicePlans.every((plan) => plan.data.responseKey === plan.correctResponse)).toBe(true);
+    expect(choicePlans.filter((plan) => plan.condition === "set-2").every((plan) => plan.data.responseKeys === "f|j")).toBe(true);
+    expect(choicePlans.filter((plan) => plan.condition === "set-4").every((plan) => plan.data.responseKeys === "f|g|j|k")).toBe(true);
+    const flankerPlans = generateTrials("flanker", flankerFixture.config, flankerFixture.seed).filter((plan) => plan.phase === "test");
+    expect(countCells(flankerPlans, (plan) => `${plan.condition}-${String(plan.data.direction)}`).size).toBe(4);
+    expect(flankerPlans.every((plan) => plan.correctResponse === (plan.data.direction === "left" ? "f" : "j"))).toBe(true);
+    const simonPlans = generateTrials("simon", simonFixture.config, simonFixture.seed).filter((plan) => plan.phase === "test");
+    expect(countCells(simonPlans, (plan) => `${plan.condition}-${String(plan.data.position)}`).size).toBe(4);
+    expect(simonPlans.every((plan) => plan.correctResponse === plan.data.responseKey)).toBe(true);
+    expect(simonPlans.filter((plan) => plan.condition === "compatible").every((plan) => (plan.data.position === "left") === (plan.data.colorName === "red"))).toBe(true);
+    const searchPlans = generateTrials("visual-search", searchFixture.config, searchFixture.seed).filter((plan) => plan.phase === "test");
+    expect(countCells(searchPlans, (plan) => `${plan.condition}-${String(plan.data.targetPresent)}`).size).toBe(8);
+    expect(searchPlans.every((plan) => plan.correctResponse === (plan.data.targetPresent === true ? "j" : "f"))).toBe(true);
+  });
+  it("新范式的时间线按键映射随试次配置变化", () => {
+    const timeline = compileTimeline(generateTrials("choice-rt", defaultConfig("choice-rt"), "adapter-choice-seed"));
+    const keySets = new Set(timeline.filter((item) => item.data.role === "response").map((item) => (item.choices as string[]).join("|")));
+    expect(keySets).toEqual(new Set(["f|j", "f|g|j|k"]));
+    const flankerTimeline = compileTimeline(generateTrials("flanker", defaultConfig("flanker"), "adapter-flanker-seed"));
+    expect(flankerTimeline.every((item) => Array.isArray(item.choices) && (item.choices as string[]).join("|") === "f|j")).toBe(true);
+    expect(flankerTimeline[0].response_ends_trial).toBe(false);
+  });
   it("预检只允许本地存储降级，阻止键盘、桌面视口、可见性和资源失败", () => {
     const healthy = [{ id: "keyboard", label: "键盘", ok: true, detail: "" }, { id: "viewport", label: "视口", ok: true, detail: "" }, { id: "visibility", label: "可见", ok: true, detail: "" }, { id: "resource", label: "资源", ok: true, detail: "" }, { id: "storage", label: "存储", ok: false, detail: "" }];
     expect(canStartPreflight(healthy)).toBe(true);
@@ -134,7 +171,26 @@ describe("Metrics", () => {
   it("正确率保留错误 trial，反应时清洗不会把错误变成正确", () => { const result = calculateMetrics("go-no-go", [trial({ condition: "go", correct: true, correctResponse: " ", response: " ", excluded: false }), trial({ trialIndex: 1, condition: "no-go", correct: false, correctResponse: null, response: " ", rtMs: 420, excluded: true, exclusionReasons: ["incorrect"] }), trial({ trialIndex: 2, condition: "no-go", correct: true, correctResponse: null, response: null, rtMs: null, excluded: false })]); expect(result.raw.go_accuracy).toBe(100); expect(result.raw.no_go_false_alarm).toBe(50); expect(result.cleaned.go_accuracy).toBe(100); expect(result.cleaned.no_go_false_alarm).toBe(50); });
   it("全错、无响应和失焦会打质量标记", () => { const result = calculateMetrics("go-no-go", [trial({ condition: "go", correct: false, response: "j", excluded: true, exclusionReasons: ["incorrect"] }), trial({ trialIndex: 1, condition: "no-go", correct: false, correctResponse: null, response: " ", rtMs: null, focusLostBeforeResponse: true, excluded: true, exclusionReasons: ["incorrect", "focus-loss"] })]); expect(result.qualityFlags).toContain("no-valid-test-trials"); expect(result.qualityFlags).toContain("low-accuracy"); expect(result.excluded).toHaveLength(2); });
   it("缺字段的原始 trial 不会让 Metrics 崩溃", () => { const result = calculateMetrics("simple-rt", [trial({ rtMs: null, correct: null, response: null, excluded: true, exclusionReasons: ["no-response"] })]); expect(result.raw.median_rt_ms).toBeNull(); });
-  it("每个 P0 Metrics 对正常、全错、无响应和失焦数据保持稳定", () => { for (const definition of definitions) { const normal = trial({ condition: definition.experimentId === "go-no-go" ? "go" : "baseline" }); const wrong = trial({ trialIndex: 1, correct: false, response: "x", excluded: true, exclusionReasons: ["incorrect"] }); const missing = trial({ trialIndex: 2, response: null, correct: null, rtMs: null, excluded: true, exclusionReasons: ["no-response"], focusLostBeforeResponse: true }); const result = calculateMetrics(definition.experimentId, [normal, wrong, missing]); expect(result.metricsVersion).toBe("1.0.0"); expect(result.excluded).toHaveLength(2); } });
+  it("新增冲突与选择指标按条件中位数差值计算", () => {
+    const flanker = calculateMetrics("flanker", [trial({ condition: "congruent", rtMs: 500 }), trial({ trialIndex: 1, condition: "incongruent", rtMs: 650 })]);
+    expect(flanker.cleaned.flanker_effect_ms).toBe(150);
+    const choice = calculateMetrics("choice-rt", [trial({ condition: "set-2", rtMs: 500 }), trial({ trialIndex: 1, condition: "set-4", rtMs: 700 })]);
+    expect(choice.cleaned.choice_cost_ms).toBe(200);
+    const simon = calculateMetrics("simon", [trial({ condition: "compatible", rtMs: 500 }), trial({ trialIndex: 1, condition: "incompatible", rtMs: 620 })]);
+    expect(simon.cleaned.simon_effect_ms).toBe(120);
+    const partial = calculateMetrics("flanker", [trial({ condition: "congruent", rtMs: 500 })]);
+    expect(partial.cleaned.flanker_effect_ms).toBeNull();
+  });
+  it("视觉搜索斜率按陈列大小的条件中位数计算", () => {
+    const search = calculateMetrics("visual-search", [
+      trial({ condition: "feature-4", rtMs: 500 }), trial({ trialIndex: 1, condition: "feature-8", rtMs: 600 }),
+      trial({ trialIndex: 2, condition: "conjunction-4", rtMs: 600 }), trial({ trialIndex: 3, condition: "conjunction-8", rtMs: 1000 })
+    ]);
+    expect(search.cleaned.feature_slope_ms_per_item).toBe(25);
+    expect(search.cleaned.conjunction_slope_ms_per_item).toBe(100);
+    expect(search.cleaned.accuracy).toBe(100);
+  });
+  it("每个官方实验 Metrics 对正常、全错、无响应和失焦数据保持稳定", () => { for (const definition of definitions) { const normal = trial({ condition: definition.experimentId === "go-no-go" ? "go" : "baseline" }); const wrong = trial({ trialIndex: 1, correct: false, response: "x", excluded: true, exclusionReasons: ["incorrect"] }); const missing = trial({ trialIndex: 2, response: null, correct: null, rtMs: null, excluded: true, exclusionReasons: ["no-response"], focusLostBeforeResponse: true }); const result = calculateMetrics(definition.experimentId, [normal, wrong, missing]); expect(result.metricsVersion).toBe("1.0.0"); expect(result.excluded).toHaveLength(2); } });
 });
 
 describe("导出与导入", () => {
@@ -179,7 +235,7 @@ describe("导出与导入", () => {
     expect(report.accepted).toHaveLength(2); expect(report.errors).toHaveLength(0);
     expect(report.warnings.some((warning) => warning.reasons.join().includes("不同尝试"))).toBe(true);
   });
-  it("教师批量导出同时提供 trial、participant-summary 和当前格式代码本", () => { const value = bundle(); expect(batchTrialsCsv([value])).toContain("trialIndex"); expect(batchSummaryCsv([value])).toContain("participantCode"); expect(codebookCsv(definitionMap["stroop-color-word"])).toContain("experiment.config"); expect(codebookCsv(definitionMap["stroop-color-word"])).toContain("1.1"); });
+  it("教师批量导出同时提供 trial、participant-summary 和当前格式代码本", () => { const value = bundle(); expect(batchTrialsCsv([value])).toContain("trialIndex"); expect(batchSummaryCsv([value])).toContain("participantCode"); expect(codebookCsv(definitionMap["stroop-color-word"])).toContain("experiment.config"); expect(codebookCsv(definitionMap["stroop-color-word"])).toContain("1.1"); expect(codebookCsv(definitionMap["choice-rt"])).toContain("data.responseKeys"); expect(codebookCsv(definitionMap["flanker"])).toContain("data.flankerCompatible"); expect(codebookCsv(definitionMap["simon"])).toContain("data.position"); expect(codebookCsv(definitionMap["visual-search"])).toContain("data.targetPresent"); });
   it("结果文件名包含实验、会话、参与者代码和尝试号供回收对号", () => { expect(resultJsonFilename(bundle())).toBe("psylab-result-stroop-color-word-session-001-p01-attempt-001.json"); });
   it("重复提交和混合实验会被拒绝", async () => { const a = new File([JSON.stringify(bundle())], "a.json"); const duplicate = new File([JSON.stringify(bundle())], "b.json"); const report = await importResultFiles([a, duplicate]); expect(report.accepted).toHaveLength(0); expect(report.errors.some((error) => error.reasons.join().includes("重复"))).toBe(true); const mixed = bundle({ experiment: { ...bundle().experiment, experimentId: "simple-rt" } }); const mixedReport = await importResultFiles([a, new File([JSON.stringify(mixed)], "mixed.json")]); expect(mixedReport.accepted).toHaveLength(0); expect(mixedReport.errors.some((error) => error.reasons.join().includes("多个实验"))).toBe(true); });
   it("同实验的 Definition、Metrics 或配置版本不一致会被拒绝", async () => { const current = bundle(); const older = bundle({ session: { ...bundle().session, attemptId: "attempt-002" }, experiment: { ...bundle().experiment, definitionVersion: "0.9.0" } }); const report = await importResultFiles([new File([JSON.stringify(current)], "current.json"), new File([JSON.stringify(older)], "older.json")]); expect(report.accepted).toHaveLength(0); expect(report.errors.some((error) => error.reasons.join().includes("definitionVersion"))).toBe(true); });
@@ -224,6 +280,14 @@ describe("本地持久化降级", () => {
     const manifest = { format: "psylab-session" as const, formatVersion: "1.0", experimentId: "simple-rt", definitionVersion: "1.0.0", distributionTier: "open" as const, runPolicyVersion: "1.0.0", config: { practiceTrials: 3, testTrials: 12 }, configHash: "sha256:" + "c".repeat(64), sessionId: "storage-fixture-01", createdAt: "2026-08-18T00:00:00.000Z" };
     expect(await saveDraft("memory-fallback", { manifest, participantCode: "p01", attemptId: "a01", randomSeed: "seed", trials: [], focusLossCount: 0, storageRecoveryUsed: true })).toBe(false);
     expect((await loadDraft("memory-fallback"))?.storageRecoveryUsed).toBe(true);
+  });
+  it("未完成的草稿可被首页列表发现并可清理", async () => {
+    const manifest = { format: "psylab-session" as const, formatVersion: "1.0", experimentId: "flanker", definitionVersion: "1.1.0", distributionTier: "open" as const, runPolicyVersion: "1.0.0", config: { practiceTrials: 4, testTrials: 24 }, configHash: "sha256:" + "b".repeat(64), sessionId: "resume-list-01", createdAt: "2026-08-18T09:00:00.000Z" };
+    await saveDraft("draft:resume-list-01", { manifest, participantCode: "", attemptId: "a01", randomSeed: "seed", trials: [trial()], focusLossCount: 0, storageRecoveryUsed: false });
+    const drafts = await listDrafts();
+    expect(drafts.some((entry) => entry.key === "draft:resume-list-01" && entry.draft.trials.length === 1)).toBe(true);
+    await deleteDraft("draft:resume-list-01");
+    expect((await listDrafts()).some((entry) => entry.key === "draft:resume-list-01")).toBe(false);
   });
   it("完成结果可从本地结果槽恢复", async () => { const value = bundle(); await saveResult(value); expect((await loadLatestResult())?.session.attemptId).toBe(value.session.attemptId); });
 });

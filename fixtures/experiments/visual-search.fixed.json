@@ -1,0 +1,6 @@
+{
+  "experimentId": "visual-search",
+  "seed": "fixed-visual-search-v1",
+  "config": { "practiceTrials": 4, "testTrials": 32 },
+  "expected": { "practiceCount": 4, "testCount": 32, "conditions": ["feature-4", "feature-8", "conjunction-4", "conjunction-8"] }
+}

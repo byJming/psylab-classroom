@@ -51,8 +51,13 @@ export function codebookCsv(definition: ExperimentDefinition): string {
     "simple-rt": [{ field: "data.delayMs", description: "程序化刺激等待时间", unit: "ms", allowed: "integer", version: "1.0" }],
     "stroop-color-word": [{ field: "data.colorName", description: "字体颜色的内部标签", unit: "", allowed: "red|green|blue", version: "1.0" }, { field: "data.word", description: "呈现词项的内部标签", unit: "", allowed: "red|green|blue", version: "1.0" }, { field: "data.responseKey", description: "该试次颜色对应按键", unit: "key", allowed: "f|j|k", version: "1.0" }],
     "go-no-go": [{ field: "data.targetType", description: "Go 或 No-Go 刺激类型", unit: "", allowed: "go|no-go", version: "1.0" }],
-    "mental-rotation": [{ field: "data.angle", description: "程序化旋转角度", unit: "degree", allowed: "0|45|90|135", version: "1.0" }, { field: "data.same", description: "图形是否同构", unit: "", allowed: "boolean", version: "1.0" }]
+    "mental-rotation": [{ field: "data.angle", description: "程序化旋转角度", unit: "degree", allowed: "0|45|90|135", version: "1.0" }, { field: "data.same", description: "图形是否同构", unit: "", allowed: "boolean", version: "1.0" }],
+    "choice-rt": [{ field: "data.setSize", description: "可选项数量", unit: "", allowed: "2|4", version: "1.1" }, { field: "data.colorName", description: "目标颜色的内部标签", unit: "", allowed: "red|green|blue|purple", version: "1.1" }, { field: "data.responseKey", description: "该试次颜色对应按键", unit: "key", allowed: "f|g|j|k", version: "1.1" }, { field: "data.responseKeys", description: "该试次允许的按键集合", unit: "key", allowed: "pipe-separated keys", version: "1.1" }],
+    flanker: [{ field: "data.direction", description: "中央目标箭头方向", unit: "", allowed: "left|right", version: "1.1" }, { field: "data.flankerCompatible", description: "周围干扰物与目标方向是否一致", unit: "", allowed: "boolean", version: "1.1" }],
+    simon: [{ field: "data.position", description: "刺激呈现位置", unit: "", allowed: "left|right", version: "1.1" }, { field: "data.colorName", description: "圆形颜色的内部标签", unit: "", allowed: "red|green", version: "1.1" }, { field: "data.responseKey", description: "该试次颜色对应按键", unit: "key", allowed: "f|j", version: "1.1" }],
+    "visual-search": [{ field: "data.searchType", description: "搜索类型", unit: "", allowed: "feature|conjunction", version: "1.1" }, { field: "data.setSize", description: "陈列物品数量", unit: "item", allowed: "4|8", version: "1.1" }, { field: "data.targetPresent", description: "目标是否出现", unit: "", allowed: "boolean", version: "1.1" }]
   };
+  const conditionAllowed: Record<string, string> = { "stroop-color-word": "congruent|incongruent", flanker: "congruent|incongruent", "choice-rt": "set-2|set-4", simon: "compatible|incompatible", "visual-search": "feature-4|feature-8|conjunction-4|conjunction-8" };
   const rows = [
     { field: "format", description: "文件格式标识", unit: "", allowed: "psylab-result", version: "1.1" },
     { field: "formatVersion", description: "Result Bundle 公共格式版本", unit: "", allowed: "1.1", version: "1.1" },
@@ -60,7 +65,7 @@ export function codebookCsv(definition: ExperimentDefinition): string {
     ...(definition.metadata.publicMetric ? [{ field: "metadata.publicMetric", description: `公众结果页的主指标：${definition.metadata.publicMetric.label}`, unit: "", allowed: definition.metadata.publicMetric.id, version: definition.definitionVersion }] : []),
     { field: "trialIndex", description: "正式/练习试次顺序", unit: "index", allowed: "integer", version: "1.0" },
     { field: "phase", description: "实验阶段", unit: "", allowed: "instruction|practice|test|break", version: "1.0" },
-    { field: "condition", description: "实验条件", unit: "", allowed: definition.experimentId === "stroop-color-word" ? "congruent|incongruent" : "definition-specific", version: "1.0" },
+    { field: "condition", description: "实验条件", unit: "", allowed: conditionAllowed[definition.experimentId] ?? "definition-specific", version: "1.0" },
     { field: "rtMs", description: "浏览器记录的反应时", unit: "ms", allowed: "number|null; non-lab precision", version: "1.0" },
     { field: "correct", description: "该响应是否符合预期", unit: "", allowed: "boolean|null", version: "1.0" },
     { field: "outcome", description: "试次结果类别；用于区分正确、错误、无响应和失焦", unit: "", allowed: "correct|incorrect|no-response|anticipation|focus-loss", version: "1.1" },

@@ -38,7 +38,11 @@ const cases = [
   { id: "simple-rt", config: { practiceTrials: 2, testTrials: 8 }, key: "Space", delay: 1300 },
   { id: "stroop-color-word", config: { practiceTrials: 4, testTrials: 16 }, key: "f", delay: 350 },
   { id: "go-no-go", config: { practiceTrials: 4, testTrials: 20, goRatio: 0.7 }, key: "Space", delay: 350 },
-  { id: "mental-rotation", config: { practiceTrials: 4, testTrials: 16 }, key: "f", delay: 350 }
+  { id: "mental-rotation", config: { practiceTrials: 4, testTrials: 16 }, key: "f", delay: 350 },
+  { id: "choice-rt", config: { practiceTrials: 4, testTrials: 24 }, key: "f", delay: 350 },
+  { id: "flanker", config: { practiceTrials: 4, testTrials: 24 }, key: "f", delay: 350 },
+  { id: "simon", config: { practiceTrials: 4, testTrials: 24 }, key: "f", delay: 350 },
+  { id: "visual-search", config: { practiceTrials: 4, testTrials: 32 }, key: "j", delay: 400 }
 ];
 
 for (const [index, item] of cases.entries()) {
@@ -71,4 +75,4 @@ for (const [index, item] of cases.entries()) {
 
 if (pageErrors.length) throw new Error(`browser errors: ${pageErrors.join(" | ")}`);
 await browser.close();
-console.log("p0 browser closure passed: 4 experiments");
+console.log("p0 browser closure passed: 8 experiments");

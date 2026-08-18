@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://psylab.example/experiments/visual-search/parameters.schema.json",
+  "title": "Visual Search 视觉搜索参数",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "practiceTrials": {
+      "type": "integer",
+      "title": "练习 trial",
+      "description": "用于熟悉找到目标按 J、没有目标按 F 的规则；不进入正式摘要。",
+      "default": 4,
+      "minimum": 4,
+      "maximum": 16
+    },
+    "testTrials": {
+      "type": "integer",
+      "title": "正式 trial",
+      "description": "搜索类型、陈列大小与目标出现尽可能平衡的正式 trial 总数。",
+      "default": 32,
+      "minimum": 16,
+      "maximum": 96,
+      "multipleOf": 8
+    },
+    "responseWindowMs": {
+      "type": "integer",
+      "title": "响应窗（毫秒）",
+      "description": "可选：搜索陈列出现后等待按键的时长。",
+      "minimum": 500,
+      "maximum": 6000
+    }
+  },
+  "required": ["practiceTrials", "testTrials"],
+  "x-psylab": {
+    "preset": "public-short",
+    "estimatedDurationMinutes": { "min": 5, "max": 12 },
+    "responseMode": "f-j",
+    "balanceRules": ["feature=conjunction", "setSize-cell-balanced", "target-present=absent"],
+    "qualityRules": ["incorrect", "no-response", "anticipation", "focus-loss"]
+  }
+}

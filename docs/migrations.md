@@ -18,6 +18,14 @@
 
 `metricsVersion` 与 `analysisRulesVersion` 保持 `1.0.0`：指标公式与清洗规则未变。旧会话链接中的 `definitionVersion: 1.0.0` 会被运行页拒绝并提示重新生成会话；旧导出的完整 Result Bundle 会因 Definition 版本不是当前版本被导入器拒绝，应重新运行任务生成新结果。
 
+## 新增官方实验 choice-rt / flanker / simon / visual-search
+
+四个新增开放层实验（choice-rt、flanker、simon、visual-search）从首版即使用 `definitionVersion 1.1.0`，遵循同一套节奏规范（注视期 → 响应窗 → ITI、种子确定性、可选 `responseWindowMs` 覆写）与条件单元格均衡规则，见 `docs/experiment-catalog.md` §7。
+
+- 新增试次数据字段均为原始值并随结果包导出：`data.setSize`/`data.colorName`/`data.responseKey`/`data.responseKeys`（choice-rt）、`data.direction`/`data.flankerCompatible`（flanker）、`data.position`/`data.colorName`/`data.responseKey`（simon）、`data.searchType`/`data.setSize`/`data.targetPresent`（visual-search）；字段含义见各实验代码本。
+- 新增指标 id（`choice_cost_ms`、`flanker_effect_ms`、`simon_effect_ms`、`feature_slope_ms_per_item`、`conjunction_slope_ms_per_item`）不改变已有实验的指标公式与清洗规则，`metricsVersion` 与 `analysisRulesVersion` 保持 `1.0.0`。
+- 新实验不影响旧结果包的导入：导入器按 experimentId 匹配 Definition，新增实验只扩展可接受范围，不修改已有校验路径。
+
 ## Result Bundle 1.1
 
 `psylab-result@1.1` 在 `experiment.config` 中增加经过规范化的实验参数快照。该对象必须通过当前 Definition 的 `configSchema`，其 SHA-256 必须等于 `experiment.configHash`；不保存匿名参与者代码、教师确认或其他会话元数据。它使独立导入器可以验证参数与 trial 结构，而不必依赖外部会话文件。

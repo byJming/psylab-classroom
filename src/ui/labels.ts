@@ -13,14 +13,23 @@ const conditionLabels: Record<string, string> = {
   congruent: "颜色一致",
   incongruent: "颜色冲突",
   go: "Go · 圆形",
-  "no-go": "No-Go · 方形"
+  "no-go": "No-Go · 方形",
+  compatible: "位置相容",
+  incompatible: "位置冲突"
 };
 
+const flankerConditionLabels: Record<string, string> = { congruent: "方向一致", incongruent: "方向冲突" };
+
 /** 把导出的原始条件 id 翻译成面向被试和教师的中文标签。 */
-export function conditionLabel(_experimentId: string, condition: string): string {
+export function conditionLabel(experimentId: string, condition: string): string {
+  if (experimentId === "flanker" && flankerConditionLabels[condition]) return flankerConditionLabels[condition];
   if (conditionLabels[condition]) return conditionLabels[condition];
   const rotation = /^(same|mirror)-(\d+)$/.exec(condition);
   if (rotation) return `${rotation[1] === "same" ? "同形" : "镜像"} · ${rotation[2]}°`;
+  const choice = /^set-(\d+)$/.exec(condition);
+  if (choice) return `${choice[1]} 选 1`;
+  const search = /^(feature|conjunction)-(\d+)$/.exec(condition);
+  if (search) return `${search[1] === "feature" ? "特征搜索" : "结合搜索"} · ${search[2]} 项`;
   return condition;
 }
 

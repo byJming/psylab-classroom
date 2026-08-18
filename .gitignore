@@ -1,0 +1,26 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+
+# 测试与缓存临时产物（可按 lockfile 与 fixtures 重建）
+.vite/
+.cache/
+coverage/
+playwright-report/
+test-results/
+
+# 浏览器冒烟测试的临时 profile 与截图
+.chrome-smoke-*/
+*.trace
+*.webm
+
+# 本地导出的结果包与日志（不提交真实课堂数据）
+*.log
+
+# 编辑器与操作系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,26 @@
+name: Feature request
+description: 提议符合本地优先和教学边界的功能或实验包
+title: "feature: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解决的问题
+      description: 说明对应的教学或公开体验场景。
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: 说明数据契约、发布层级、隐私、许可和浏览器时序影响。
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: 范围确认
+      options:
+        - label: 此提议不要求账号、云端数据库、默认远程追踪或生理采集。
+          required: true

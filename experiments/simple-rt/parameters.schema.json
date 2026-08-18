@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://psylab.example/experiments/simple-rt/parameters.schema.json",
+  "title": "Simple RT 参数",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "practiceTrials": {
+      "type": "integer",
+      "title": "练习 trial",
+      "description": "用于熟悉目标和空格响应；不进入正式摘要。",
+      "default": 3,
+      "minimum": 2,
+      "maximum": 12
+    },
+    "testTrials": {
+      "type": "integer",
+      "title": "正式 trial",
+      "description": "进入本次任务描述性统计的正式 trial 数。",
+      "default": 12,
+      "minimum": 8,
+      "maximum": 80
+    },
+    "responseWindowMs": {
+      "type": "integer",
+      "title": "响应窗（毫秒）",
+      "description": "可选：目标出现后等待按键的时长。",
+      "minimum": 500,
+      "maximum": 6000
+    }
+  },
+  "required": ["practiceTrials", "testTrials"],
+  "x-psylab": {
+    "preset": "public-short",
+    "estimatedDurationMinutes": { "min": 3, "max": 8 },
+    "responseMode": "spacebar",
+    "qualityRules": ["anticipation", "no-response", "focus-loss"]
+  }
+}

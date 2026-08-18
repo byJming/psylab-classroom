@@ -1,0 +1,35 @@
+name: Bug report
+description: 报告可复现的功能、导入、导出或运行时问题
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "请勿附上真实课堂结果、姓名、学号、完整浏览器日志或其他个人信息。只使用合成最小复现数据。"
+  - type: textarea
+    id: observed
+    attributes:
+      label: 实际行为
+      description: 请描述错误信息、导入报告或界面状态。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 最小复现步骤
+      description: 包含实验、匿名合成配置、浏览器大版本和操作步骤。
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 数据确认
+      options:
+        - label: 我确认未附上真实参与者数据或任何可识别信息。
+          required: true

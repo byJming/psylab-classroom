@@ -1,0 +1,6 @@
+{
+  "experimentId": "mental-rotation",
+  "seed": "fixed-mental-rotation-v1",
+  "config": { "practiceTrials": 4, "testTrials": 24 },
+  "expected": { "practiceCount": 4, "testCount": 24, "conditionPattern": "same|mirror-angle" }
+}

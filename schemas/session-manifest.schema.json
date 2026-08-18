@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://psylab.example/schemas/session-manifest.schema.json",
+  "title": "PsyLab Session Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "formatVersion",
+    "experimentId",
+    "definitionVersion",
+    "distributionTier",
+    "runPolicyVersion",
+    "config",
+    "configHash",
+    "sessionId"
+  ],
+  "properties": {
+    "format": { "const": "psylab-session" },
+    "formatVersion": { "const": "1.0" },
+    "experimentId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"
+    },
+    "definitionVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "distributionTier": { "enum": ["open", "guided", "controlled"] },
+    "runPolicyVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "configHash": {
+      "type": "string",
+      "pattern": "^sha256:[A-Fa-f0-9]{64}$"
+    },
+    "sessionId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{8,96}$"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

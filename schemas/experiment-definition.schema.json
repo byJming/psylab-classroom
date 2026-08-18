@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://psylab.example/schemas/experiment-definition.schema.json",
+  "title": "PsyLab Experiment Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "formatVersion",
+    "experimentId",
+    "definitionVersion",
+    "metadata",
+    "configSchema",
+    "runPolicy",
+    "metrics",
+    "license"
+  ],
+  "properties": {
+    "format": {
+      "const": "psylab-experiment-definition"
+    },
+    "formatVersion": { "const": "1.1" },
+    "experimentId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"
+    },
+    "definitionVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "language",
+        "purpose",
+        "theoryBackground",
+        "design",
+        "independentVariables",
+        "dependentVariables",
+        "durationMinutes",
+        "riskLevel",
+        "status"
+      ],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "language": { "const": "zh-CN" },
+        "purpose": { "type": "string", "minLength": 1 },
+        "theoryBackground": { "type": "string", "minLength": 1 },
+        "design": { "type": "string", "minLength": 1 },
+        "independentVariables": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "dependentVariables": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "durationMinutes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["min", "max"],
+          "properties": {
+            "min": { "type": "number", "exclusiveMinimum": 0 },
+            "max": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "riskLevel": { "enum": ["low", "contextual", "controlled"] },
+        "status": { "enum": ["alpha", "beta", "stable"] },
+        "courses": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "limitations": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "publicMetric": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "label", "description", "interpretation"],
+          "properties": {
+            "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,63}$" },
+            "label": { "type": "string", "minLength": 1 },
+            "description": { "type": "string", "minLength": 1 },
+            "interpretation": { "type": "string", "minLength": 1 },
+            "transform": { "enum": ["identity", "invert100"] }
+          }
+        }
+      }
+    },
+    "configSchema": {
+      "type": "object",
+      "description": "A JSON Schema object used to validate experiment configuration."
+    },
+    "stimuli": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "enum": ["procedural", "bundled", "mixed"] },
+        "licenseFile": { "type": "string", "minLength": 1 },
+        "sourceNotes": { "type": "string" }
+      }
+    },
+    "runPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tier",
+        "version",
+        "publicCatalog",
+        "requiresTeacherAcknowledgement",
+        "requiresDebrief"
+      ],
+      "properties": {
+        "tier": { "enum": ["open", "guided", "controlled"] },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "publicCatalog": { "type": "boolean" },
+        "requiresTeacherAcknowledgement": { "type": "boolean" },
+        "requiresDebrief": { "type": "boolean" },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "tier": { "const": "open" } }, "required": ["tier"] },
+          "then": {
+            "properties": {
+              "publicCatalog": { "const": true },
+              "requiresTeacherAcknowledgement": { "const": false },
+              "requiresDebrief": { "const": false }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "tier": { "const": "guided" } }, "required": ["tier"] },
+          "then": {
+            "properties": {
+              "publicCatalog": { "const": false },
+              "requiresTeacherAcknowledgement": { "const": true },
+              "requiresDebrief": { "const": true }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "tier": { "const": "controlled" } }, "required": ["tier"] },
+          "then": {
+            "properties": {
+              "publicCatalog": { "const": false },
+              "requiresTeacherAcknowledgement": { "const": true },
+              "requiresDebrief": { "const": true }
+            }
+          }
+        }
+      ]
+    },
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "unit", "description"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{1,63}$"
+          },
+          "label": { "type": "string", "minLength": 1 },
+          "unit": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "kind": {
+            "enum": ["descriptive", "within_subject_difference", "quality"]
+          }
+        }
+      }
+    },
+    "license": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "content", "sourceFile"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "content": { "type": "string", "minLength": 1 },
+        "sourceFile": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://psylab.example/schemas/result-bundle.schema.json",
+  "title": "PsyLab Result Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "formatVersion",
+    "experiment",
+    "session",
+    "environment",
+    "quality",
+    "trials",
+    "summary"
+  ],
+  "properties": {
+    "format": { "const": "psylab-result" },
+    "formatVersion": { "const": "1.1" },
+    "experiment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "experimentId",
+        "definitionVersion",
+        "metricsVersion",
+        "analysisRulesVersion",
+        "distributionTier",
+        "runPolicyVersion",
+        "configHash",
+        "config"
+      ],
+      "properties": {
+        "experimentId": { "type": "string" },
+        "definitionVersion": { "type": "string" },
+        "metricsVersion": { "type": "string" },
+        "analysisRulesVersion": { "type": "string" },
+        "distributionTier": { "enum": ["open", "guided", "controlled"] },
+        "runPolicyVersion": { "type": "string" },
+        "configHash": {
+          "type": "string",
+          "pattern": "^sha256:[A-Fa-f0-9]{64}$"
+        },
+        "config": {
+          "type": "object",
+          "description": "Canonical experiment parameters only. It excludes participant data and teacher acknowledgement metadata.",
+          "additionalProperties": true
+        }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "participantCode", "attemptId", "randomSeed"],
+      "properties": {
+        "sessionId": { "type": "string" },
+        "participantCode": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]{1,64}$"
+        },
+        "attemptId": { "type": "string" },
+        "randomSeed": { "type": "string", "minLength": 1 }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["browserFamily", "platformFamily", "viewportBucket", "inputMode"],
+      "properties": {
+        "browserFamily": { "enum": ["Chromium", "Firefox", "Safari", "Other", "Unknown"] },
+        "platformFamily": { "enum": ["Windows", "macOS", "Linux", "Android", "iOS", "Other", "Unknown"] },
+        "viewportBucket": { "enum": ["small", "medium", "large", "unknown"] },
+        "inputMode": { "enum": ["keyboard", "pointer", "touch", "unknown"] }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["completed", "focusLossCount", "fullscreenExitCount", "storageRecoveryUsed"],
+      "properties": {
+        "completed": { "type": "boolean" },
+        "focusLossCount": { "type": "integer", "minimum": 0 },
+        "fullscreenExitCount": { "type": "integer", "minimum": 0 },
+        "storageRecoveryUsed": { "type": "boolean" },
+        "flags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "trials": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/trial"
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "exportedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "trial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trialIndex", "phase", "condition", "correct", "rtMs", "excluded", "exclusionReasons"],
+      "properties": {
+        "trialIndex": { "type": "integer", "minimum": 0 },
+        "phase": { "enum": ["instruction", "practice", "test", "break"] },
+        "condition": { "type": "string" },
+        "stimulusId": { "type": ["string", "null"] },
+        "correctResponse": { "type": ["string", "null"] },
+        "response": { "type": ["string", "null"] },
+        "correct": { "type": ["boolean", "null"] },
+        "outcome": { "enum": ["correct", "incorrect", "no-response", "anticipation", "focus-loss"] },
+        "rtMs": { "type": ["number", "null"], "minimum": 0 },
+        "stimulusDurationMs": { "type": ["number", "null"], "minimum": 0 },
+        "visibilityState": { "enum": ["visible", "hidden", "unknown"] },
+        "focusLostBeforeResponse": { "type": "boolean" },
+        "excluded": { "type": "boolean" },
+        "exclusionReasons": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "data": {
+          "type": "object",
+          "description": "Experiment-specific fields. They must be documented in the codebook.",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

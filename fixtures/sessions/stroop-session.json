@@ -1,0 +1,12 @@
+{
+  "format": "psylab-session",
+  "formatVersion": "1.0",
+  "experimentId": "stroop-color-word",
+  "definitionVersion": "1.1.0",
+  "distributionTier": "open",
+  "runPolicyVersion": "1.0.0",
+  "config": { "practiceTrials": 4, "testTrials": 16 },
+  "configHash": "sha256:f47e6eb4fb1000caabb2067d762d0e8ed9525d7067a22f130bc19d222603f7ba",
+  "sessionId": "fixture-session-01",
+  "createdAt": "2026-08-18T00:00:00.000Z"
+}

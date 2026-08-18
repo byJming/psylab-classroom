@@ -1,0 +1,31 @@
+name: Experiment method issue
+description: 报告实验设计、指标、清洗规则、教学解释或发布层级问题
+title: "method: "
+labels: [method]
+body:
+  - type: textarea
+    id: experiment
+    attributes:
+      label: 实验与版本
+      description: 写明 experimentId、Definition 版本、Metrics 版本和涉及条件。
+    validations:
+      required: true
+  - type: textarea
+    id: concern
+    attributes:
+      label: 方法问题
+      description: 说明可复现依据、潜在影响和建议修正；不要由个体表现推导临床或能力结论。
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 依据或最小合成示例
+      description: 可提供公开参考或合成数据，不能上传真实课堂结果。
+  - type: checkboxes
+    id: boundary
+    attributes:
+      label: 边界确认
+      options:
+        - label: 我确认该问题不包含真实参与者或可识别数据。
+          required: true

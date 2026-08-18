@@ -1,0 +1,6 @@
+{
+  "experimentId": "simple-rt",
+  "seed": "fixed-simple-rt-v1",
+  "config": { "practiceTrials": 3, "testTrials": 12 },
+  "expected": { "practiceCount": 3, "testCount": 12, "conditions": ["target"] }
+}

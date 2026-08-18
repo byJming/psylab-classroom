@@ -1,0 +1,26 @@
+name: Content or license issue
+description: 报告刺激、词表、图像、音频、字体或文档的来源与许可问题
+title: "license: "
+labels: [license]
+body:
+  - type: textarea
+    id: material
+    attributes:
+      label: 涉及材料
+      description: 写明路径、实验和材料版本；不要上传受限材料副本。
+    validations:
+      required: true
+  - type: textarea
+    id: concern
+    attributes:
+      label: 许可或来源问题
+      description: 说明权利状态、来源链接或可能的替代方案。
+    validations:
+      required: true
+  - type: checkboxes
+    id: rights
+    attributes:
+      label: 数据与权利确认
+      options:
+        - label: 我确认没有上传未经许可的材料或真实课堂数据。
+          required: true

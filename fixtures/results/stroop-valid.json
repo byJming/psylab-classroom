@@ -1,0 +1,23 @@
+{
+  "format": "psylab-result",
+  "formatVersion": "1.1",
+  "experiment": {
+    "experimentId": "stroop-color-word",
+    "definitionVersion": "1.1.0",
+    "metricsVersion": "1.0.0",
+    "analysisRulesVersion": "1.0.0",
+    "distributionTier": "open",
+    "runPolicyVersion": "1.0.0",
+    "configHash": "sha256:f47e6eb4fb1000caabb2067d762d0e8ed9525d7067a22f130bc19d222603f7ba",
+    "config": { "practiceTrials": 4, "testTrials": 16 }
+  },
+  "session": { "sessionId": "fixture-session-01", "participantCode": "fixture-p01", "attemptId": "fixture-attempt-01", "randomSeed": "fixture-seed" },
+  "environment": { "browserFamily": "Chromium", "platformFamily": "Windows", "viewportBucket": "large", "inputMode": "keyboard" },
+  "quality": { "completed": false, "focusLossCount": 0, "fullscreenExitCount": 0, "storageRecoveryUsed": false, "flags": ["interrupted"] },
+  "trials": [
+    { "trialIndex": 0, "phase": "test", "condition": "congruent", "stimulusId": "fixture-0", "correctResponse": "f", "response": "f", "correct": true, "rtMs": 480, "stimulusDurationMs": null, "visibilityState": "visible", "focusLostBeforeResponse": false, "excluded": false, "exclusionReasons": [], "data": { "colorName": "red" } },
+    { "trialIndex": 1, "phase": "test", "condition": "incongruent", "stimulusId": "fixture-1", "correctResponse": "j", "response": "j", "correct": true, "rtMs": 620, "stimulusDurationMs": null, "visibilityState": "visible", "focusLostBeforeResponse": false, "excluded": false, "exclusionReasons": [], "data": { "colorName": "green" } }
+  ],
+  "summary": { "stroop_interference_ms": 140 },
+  "exportedAt": "2026-08-18T00:00:00.000Z"
+}

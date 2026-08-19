@@ -65,3 +65,23 @@ export function visualSearchSvgMarkup(stimulusId: string, searchType: string, se
   }).join("");
   return `<svg class="visual-search-svg" viewBox="0 0 360 360" role="img" aria-label="一组程序化搜索陈列">${shapes}</svg>`;
 }
+
+export function posnerCueMarkup(cueType: string, cuePosition?: string): string {
+  const cue = cueType === "neutral" ? "＋" : cuePosition === "left" ? "←" : cuePosition === "right" ? "→" : "◇";
+  return `<div class="posner-cue ${cueType}" aria-label="空间线索">${cue}</div>`;
+}
+
+export function posnerTargetMarkup(position: string): string {
+  return `<div class="posner-target ${position === "left" ? "left" : "right"}" aria-label="目标位置"><div class="measured-circle posner-target-dot"></div></div>`;
+}
+
+export function signalDetectionMarkup(signalPresent: boolean): string {
+  const texture = signalPresent ? "signal" : "noise";
+  return `<div class="signal-detection-stimulus ${texture}" aria-label="${signalPresent ? "有信号" : "无信号"}"><span></span></div>`;
+}
+
+export function taskSwitchingMarkup(rule: string, colorName: string, shape: string): string {
+  const color = colorName === "red" ? "#d94841" : "#1971c2";
+  const shapeMarkup = shape === "circle" ? `<circle cx="60" cy="60" r="38" fill="${color}"/>` : `<rect x="22" y="22" width="76" height="76" fill="${color}"/>`;
+  return `<div class="task-switch-stimulus"><span class="task-switch-rule">${rule === "color" ? "颜色" : "形状"}</span><svg viewBox="0 0 120 120" aria-label="${colorName === "red" ? "红色" : "蓝色"}${shape === "circle" ? "圆形" : "方形"}">${shapeMarkup}</svg></div>`;
+}

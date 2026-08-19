@@ -1,0 +1,6 @@
+{
+  "experimentId": "task-switching",
+  "seed": "fixed-task-switching-v1",
+  "config": { "practiceTrials": 8, "testTrials": 48 },
+  "expected": { "practiceCount": 8, "testCount": 48, "conditions": ["repeat", "switch"] }
+}

@@ -115,6 +115,7 @@
         },
         "publicCatalog": { "type": "boolean" },
         "requiresTeacherAcknowledgement": { "type": "boolean" },
+        "requiresParticipantAcknowledgement": { "type": "boolean" },
         "requiresDebrief": { "type": "boolean" },
         "notes": {
           "type": "array",
@@ -128,6 +129,7 @@
             "properties": {
               "publicCatalog": { "const": true },
               "requiresTeacherAcknowledgement": { "const": false },
+              "requiresParticipantAcknowledgement": { "const": false },
               "requiresDebrief": { "const": false }
             }
           }
@@ -135,9 +137,11 @@
         {
           "if": { "properties": { "tier": { "const": "guided" } }, "required": ["tier"] },
           "then": {
+            "required": ["requiresParticipantAcknowledgement"],
             "properties": {
-              "publicCatalog": { "const": false },
-              "requiresTeacherAcknowledgement": { "const": true },
+              "publicCatalog": { "const": true },
+              "requiresTeacherAcknowledgement": { "const": false },
+              "requiresParticipantAcknowledgement": { "const": true },
               "requiresDebrief": { "const": true }
             }
           }

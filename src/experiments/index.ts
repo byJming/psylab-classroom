@@ -96,7 +96,47 @@ export const visualSearch: ExperimentDefinition = {
   license: { code: "Apache-2.0", content: "CC0-1.0", sourceFile: "LICENSES.md" }
 };
 
-export const definitions = [simpleRt, choiceRt, stroop, flanker, simon, goNoGo, visualSearch, mentalRotation];
+export const posnerCueing: ExperimentDefinition = {
+  format: "psylab-experiment-definition", formatVersion: "1.1", experimentId: "posner-cueing", definitionVersion: "1.0.0",
+  metadata: { title: "Posner 空间线索", language: "zh-CN", purpose: "观察空间线索有效、无效或中性时，注意定向对目标反应的影响。", theoryBackground: "Posner 线索范式通过比较有效线索、无效线索和中性线索下的反应表现，讨论空间注意的定向与重新定向。", design: "被试内比较 valid、invalid 与 neutral 三种线索条件；目标随机出现在左或右，按目标位置作答。", independentVariables: ["线索有效性（有效/无效/中性）"], dependentVariables: ["线索效应（无效减有效）", "总体正确率"], durationMinutes: { min: 6, max: 12 }, riskLevel: "low", status: "beta", courses: ["实验心理学", "认知心理学"], limitations: [...commonLimitations, "本实现将线索与目标呈现在同一响应画面，适合课堂演示；若要估计严格的 SOA 效应，应使用专门时序验证。"], publicMetric: { id: "posner_cue_effect_ms", label: "空间线索效应", description: "比较无效线索与有效线索条件下正确反应时间的差异。", interpretation: "正值表示本次任务中无效线索通常更慢；它描述本次任务的注意定向现象，不是注意力能力评分。" } },
+  configSchema: { type: "object", additionalProperties: false, properties: { practiceTrials: { type: "integer", minimum: 6, maximum: 18 }, testTrials: { type: "integer", minimum: 18, maximum: 96, multipleOf: 6 }, responseWindowMs: responseWindowSchema }, required: ["practiceTrials", "testTrials"] },
+  stimuli: { mode: "procedural", licenseFile: "LICENSES.md", sourceNotes: "箭头线索、圆形目标和位置均由 HTML/CSS 程序化生成。" },
+  runPolicy: { tier: "open", version: "1.0.0", publicCatalog: true, requiresTeacherAcknowledgement: false, requiresDebrief: false },
+  metrics: [{ id: "posner_cue_effect_ms", label: "Posner 线索效应", unit: "ms", description: "无效线索与有效线索条件正确试次中位数反应时之差。", kind: "within_subject_difference" }, { id: "accuracy", label: "总体正确率", unit: "%", description: "正式阶段正确响应比例。", kind: "descriptive" }],
+  license: { code: "Apache-2.0", content: "CC0-1.0", sourceFile: "LICENSES.md" }
+};
+
+export const signalDetection: ExperimentDefinition = {
+  format: "psylab-experiment-definition", formatVersion: "1.1", experimentId: "signal-detection", definitionVersion: "1.0.0",
+  metadata: { title: "信号检测", language: "zh-CN", purpose: "观察在不同噪声背景中判断微弱信号时的命中、虚报与反应时。", theoryBackground: "信号检测理论把敏感性与反应标准区分开来：同样的刺激辨别能力下，较宽松或较严格的判断标准会产生不同的命中和虚报模式。", design: "被试内比较有信号与无信号试次；圆形背景中呈现细微纹理差异，按 F 表示检测到信号，按 J 表示没有信号。", independentVariables: ["信号是否存在"], dependentVariables: ["命中率", "虚报率", "敏感性 d'", "判断标准 c"], durationMinutes: { min: 6, max: 12 }, riskLevel: "low", status: "beta", courses: ["实验心理学", "认知心理学"], limitations: [...commonLimitations, "d' 和 c 是基于本次试次比例的描述性估计；试次数过少时会使用连续性校正。"], publicMetric: { id: "signal_detection_dprime", label: "信号辨别敏感性", description: "根据命中与虚报模式估计本次任务中的信号检测敏感性。", interpretation: "数值越高表示本次任务中更能区分有信号和无信号；它不是感官能力等级或临床指标。" } },
+  configSchema: { type: "object", additionalProperties: false, properties: { practiceTrials: { type: "integer", minimum: 6, maximum: 18 }, testTrials: { type: "integer", minimum: 24, maximum: 120, multipleOf: 4 }, responseWindowMs: responseWindowSchema }, required: ["practiceTrials", "testTrials"] },
+  stimuli: { mode: "procedural", licenseFile: "LICENSES.md", sourceNotes: "圆形和纹理线条由 CSS/HTML 程序化生成。" },
+  runPolicy: { tier: "open", version: "1.0.0", publicCatalog: true, requiresTeacherAcknowledgement: false, requiresDebrief: false },
+  metrics: [{ id: "signal_detection_dprime", label: "敏感性 d'", unit: "d'", description: "由有信号命中率和无信号虚报率估计的敏感性。", kind: "descriptive" }, { id: "signal_detection_criterion", label: "判断标准 c", unit: "c", description: "由命中率和虚报率估计的判断标准。", kind: "descriptive" }, { id: "hit_rate", label: "命中率", unit: "%", description: "有信号试次中报告有信号的比例。", kind: "descriptive" }, { id: "false_alarm_rate", label: "虚报率", unit: "%", description: "无信号试次中错误报告有信号的比例。", kind: "descriptive" }],
+  license: { code: "Apache-2.0", content: "CC0-1.0", sourceFile: "LICENSES.md" }
+};
+
+export const nBack: ExperimentDefinition = {
+  format: "psylab-experiment-definition", formatVersion: "1.1", experimentId: "n-back", definitionVersion: "1.1.0",
+   metadata: { title: "N-back 工作记忆", language: "zh-CN", purpose: "观察持续更新工作记忆并判断当前项目是否匹配若干步之前项目时的表现。", theoryBackground: "N-back 要求参与者持续保持最近项目并更新记忆内容；本版本以 1-back 和 2-back 区块比较不同工作记忆负荷。", design: "被试内比较 1-back 和 2-back 区块；每个区块先提示规则并呈现 n 个无需作答的准备字母，随后逐个呈现需作答字母，按 F 表示匹配，按 J 表示不匹配。", independentVariables: ["工作记忆负荷（1-back/2-back）", "当前项目是否匹配"], dependentVariables: ["命中率", "虚报率", "反应时", "负荷差异"], durationMinutes: { min: 8, max: 16 }, riskLevel: "low", status: "beta", courses: ["实验心理学", "认知心理学", "认知神经科学"], limitations: [...commonLimitations, "本任务只描述当前字母序列中的更新和匹配表现，不等同于工作记忆容量或智力评分。"], publicMetric: { id: "nback_load_cost_ms", label: "工作记忆负荷成本", description: "比较 2-back 与 1-back 条件正确反应的中位数反应时差。", interpretation: "正值表示本次任务中较高负荷通常更慢；它描述任务条件差异，不是记忆能力等级。" } },
+  configSchema: { type: "object", additionalProperties: false, properties: { practiceTrials: { type: "integer", minimum: 8, maximum: 24 }, testTrials: { type: "integer", minimum: 24, maximum: 120, multipleOf: 4 }, responseWindowMs: responseWindowSchema }, required: ["practiceTrials", "testTrials"] },
+  stimuli: { mode: "procedural", licenseFile: "LICENSES.md", sourceNotes: "英文字母由固定字符集程序化生成，序列由随机种子确定。" },
+  runPolicy: { tier: "open", version: "1.0.0", publicCatalog: true, requiresTeacherAcknowledgement: false, requiresDebrief: false },
+  metrics: [{ id: "nback_load_cost_ms", label: "N-back 负荷成本", unit: "ms", description: "2-back 与 1-back 条件正确试次中位数反应时之差。", kind: "within_subject_difference" }, { id: "nback_hit_rate", label: "匹配命中率", unit: "%", description: "匹配试次中正确报告匹配的比例。", kind: "descriptive" }, { id: "nback_false_alarm_rate", label: "不匹配虚报率", unit: "%", description: "不匹配试次中错误报告匹配的比例。", kind: "descriptive" }],
+  license: { code: "Apache-2.0", content: "CC0-1.0", sourceFile: "LICENSES.md" }
+};
+
+export const taskSwitching: ExperimentDefinition = {
+  format: "psylab-experiment-definition", formatVersion: "1.1", experimentId: "task-switching", definitionVersion: "1.0.0",
+  metadata: { title: "任务切换", language: "zh-CN", purpose: "观察在颜色判断与形状判断之间切换时产生的反应时间和准确率成本。", theoryBackground: "任务切换范式通过比较重复试次与切换试次，讨论任务规则重配置和执行控制的成本。", design: "被试内比较 repeat 与 switch 两种试次；每个试次先给出颜色或形状规则提示，再呈现彩色几何图形。", independentVariables: ["任务转移（重复/切换）", "当前规则（颜色/形状）"], dependentVariables: ["切换成本", "总体正确率", "条件反应时"], durationMinutes: { min: 7, max: 14 }, riskLevel: "low", status: "beta", courses: ["实验心理学", "认知心理学"], limitations: [...commonLimitations, "切换成本受规则熟悉程度、提示阅读和键盘反应影响；不解释为执行功能等级。"], publicMetric: { id: "task_switch_cost_ms", label: "任务切换成本", description: "比较 switch 与 repeat 条件正确反应时间的差异。", interpretation: "正值表示本次任务中切换规则通常更慢；它描述当前任务的执行控制成本，不是能力评分。" } },
+  configSchema: { type: "object", additionalProperties: false, properties: { practiceTrials: { type: "integer", minimum: 8, maximum: 24 }, testTrials: { type: "integer", minimum: 24, maximum: 120, multipleOf: 4 }, responseWindowMs: responseWindowSchema }, required: ["practiceTrials", "testTrials"] },
+  stimuli: { mode: "procedural", licenseFile: "LICENSES.md", sourceNotes: "颜色和几何图形由 CSS 程序化生成。" },
+  runPolicy: { tier: "open", version: "1.0.0", publicCatalog: true, requiresTeacherAcknowledgement: false, requiresDebrief: false },
+  metrics: [{ id: "task_switch_cost_ms", label: "切换成本", unit: "ms", description: "switch 与 repeat 条件正确试次中位数反应时之差。", kind: "within_subject_difference" }, { id: "accuracy", label: "总体正确率", unit: "%", description: "正式阶段正确响应比例。", kind: "descriptive" }],
+  license: { code: "Apache-2.0", content: "CC0-1.0", sourceFile: "LICENSES.md" }
+};
+
+export const definitions = [simpleRt, choiceRt, stroop, flanker, simon, goNoGo, visualSearch, mentalRotation, posnerCueing, signalDetection, nBack, taskSwitching];
 export const definitionMap = Object.fromEntries(definitions.map((definition) => [definition.experimentId, definition]));
 
 export function defaultConfig(id: string): Record<string, unknown> {
@@ -104,6 +144,10 @@ export function defaultConfig(id: string): Record<string, unknown> {
   if (id === "stroop-color-word") return { practiceTrials: 4, testTrials: 24 };
   if (id === "go-no-go") return { practiceTrials: 4, testTrials: 24, goRatio: 0.7 };
   if (id === "visual-search") return { practiceTrials: 4, testTrials: 32 };
+  if (id === "posner-cueing") return { practiceTrials: 6, testTrials: 36 };
+  if (id === "signal-detection") return { practiceTrials: 8, testTrials: 40 };
+  if (id === "n-back") return { practiceTrials: 8, testTrials: 48 };
+  if (id === "task-switching") return { practiceTrials: 8, testTrials: 48 };
   return { practiceTrials: 4, testTrials: 24 };
 }
 
@@ -236,6 +280,61 @@ function visualSearchPlans(phase: "practice" | "test", count: number, config: Re
   return shuffle(balancedCells(count, SEARCH_BASE), `${seedKey}-shuffle`).map((cell, index) => ({ phase, condition: `${cell.searchType}-${cell.setSize}`, stimulusId: `search-${phase === "practice" ? "p" : "t"}-${index}`, correctResponse: cell.targetPresent ? "j" : "f", stimulus: "search-display", data: { searchType: cell.searchType, setSize: cell.setSize, targetPresent: cell.targetPresent, stimulusType: "search-display", ...pacingData("visual-search", `${seedKey}-${index}`, config, false) } }));
 }
 
+const POSNER_BASE: Array<{ cueType: "valid" | "invalid" | "neutral"; position: "left" | "right" }> = [];
+for (const cueType of ["valid", "invalid", "neutral"] as const) for (const position of ["left", "right"] as const) POSNER_BASE.push({ cueType, position });
+function posnerPlans(phase: "practice" | "test", count: number, config: Record<string, unknown>, seedKey: string): TrialPlan[] {
+  return shuffle(balancedCells(count, POSNER_BASE), `${seedKey}-shuffle`).map((cell, index) => {
+    const cuePosition = cell.cueType === "valid" ? cell.position : cell.cueType === "invalid" ? cell.position === "left" ? "right" : "left" : "neutral";
+    return { phase, condition: cell.cueType, stimulusId: `posner-${phase === "practice" ? "p" : "t"}-${index}`, correctResponse: cell.position === "left" ? "f" : "j", stimulus: "posner-target", data: { cueType: cell.cueType, cuePosition, position: cell.position, stimulusType: "posner-target", cueMs: 300, responseKeys: "f|j", ...pacingData("posner-cueing", `${seedKey}-${index}`, config, false) } };
+  });
+}
+
+function signalDetectionPlans(phase: "practice" | "test", count: number, config: Record<string, unknown>, seedKey: string): TrialPlan[] {
+  const base = balancedCells(count, [true, false]);
+  return shuffle(base, `${seedKey}-shuffle`).map((signal, index) => ({ phase, condition: signal ? "signal" : "noise", stimulusId: `sd-${phase === "practice" ? "p" : "t"}-${index}`, correctResponse: signal ? "f" : "j", stimulus: signal ? "signal-present" : "signal-absent", data: { signalPresent: signal, stimulusType: "signal-detection", responseKeys: "f|j", ...pacingData("signal-detection", `${seedKey}-${index}`, config, false) } }));
+}
+
+const NBACK_LETTERS = ["B", "C", "F", "H", "K", "L", "P", "R", "T", "Y"];
+function nBackPlans(phase: "practice" | "test", count: number, config: Record<string, unknown>, seedKey: string): TrialPlan[] {
+  const blockCount = phase === "practice" ? 2 : 4;
+  const blockLevels = shuffle(balancedCells(blockCount, [1, 2] as const), `${seedKey}-levels`);
+  const blockSizes = Array.from({ length: blockCount }, (_, index) => Math.floor(count / blockCount) + (index < count % blockCount ? 1 : 0));
+  const random = seededRandom(`${seedKey}:letters`);
+  const plans: TrialPlan[] = [];
+  for (const [blockIndex, n] of blockLevels.entries()) {
+    const blockTrialCount = blockSizes[blockIndex]!;
+    if (blockTrialCount <= 0) break;
+    const leadInLetters = Array.from({ length: n }, () => NBACK_LETTERS[Math.floor(random() * NBACK_LETTERS.length)]!);
+    const sequence = [...leadInLetters];
+    for (let withinBlockIndex = 0; withinBlockIndex < blockTrialCount; withinBlockIndex += 1) {
+      const shouldMatch = withinBlockIndex % 2 === 0;
+      const previous = sequence[sequence.length - n]!;
+      let letter = NBACK_LETTERS[Math.floor(random() * NBACK_LETTERS.length)]!;
+      if (shouldMatch) letter = previous;
+      else if (letter === previous) letter = NBACK_LETTERS[(NBACK_LETTERS.indexOf(letter) + 1) % NBACK_LETTERS.length]!;
+      sequence.push(letter);
+      const match = letter === previous;
+      const index = plans.length;
+      plans.push({ phase, condition: `${n}-back`, stimulusId: `nback-${phase === "practice" ? "p" : "t"}-${index}`, correctResponse: match ? "f" : "j", stimulus: letter, data: { n, letter, match, ruleCue: withinBlockIndex === 0, leadInLetters: withinBlockIndex === 0 ? leadInLetters.join("|") : "", blockIndex, stimulusType: "n-back", responseKeys: "f|j", ...pacingData("n-back", `${seedKey}-${index}`, config, false) } });
+    }
+  }
+  return plans;
+}
+
+function taskSwitchingPlans(phase: "practice" | "test", count: number, config: Record<string, unknown>, seedKey: string): TrialPlan[] {
+  const switchTypes = shuffle(balancedCells(count, ["repeat", "switch"] as const), `${seedKey}-types`);
+  const firstRepeat = switchTypes.indexOf("repeat");
+  if (firstRepeat > 0) [switchTypes[0], switchTypes[firstRepeat]] = [switchTypes[firstRepeat], switchTypes[0]];
+  const features = shuffle(balancedCells(count, [{ color: "red", shape: "circle" }, { color: "red", shape: "square" }, { color: "blue", shape: "circle" }, { color: "blue", shape: "square" }] as const), `${seedKey}-features`);
+  let rule: "color" | "shape" = seededRandom(`${seedKey}:rule`)() < 0.5 ? "color" : "shape";
+  return switchTypes.map((switchType, index) => {
+    if (index > 0 && switchType === "switch") rule = rule === "color" ? "shape" : "color";
+    const feature = features[index]!;
+    const correctResponse = rule === "color" ? (feature.color === "red" ? "f" : "j") : (feature.shape === "circle" ? "f" : "j");
+    return { phase, condition: switchType, stimulusId: `switch-${phase === "practice" ? "p" : "t"}-${index}`, correctResponse, stimulus: `${rule}:${feature.color}:${feature.shape}`, data: { rule, switchType, colorName: feature.color, shape: feature.shape, stimulusType: "task-switching", responseKeys: "f|j", ...pacingData("task-switching", `${seedKey}-${index}`, config, false) } };
+  });
+}
+
 export function generateTrials(id: string, config: Record<string, unknown>, seed: string): TrialPlan[] {
   if (id === "simple-rt") {
     const plan = (phase: "practice" | "test", index: number): TrialPlan => ({ phase, condition: "target", stimulusId: `rt-${phase === "practice" ? "p" : "t"}-${index}`, correctResponse: " ", stimulus: "●", data: { anticipationSensitive: true, ...pacingData("simple-rt", `${seed}-${phase}-${index}`, config, false) } });
@@ -247,6 +346,10 @@ export function generateTrials(id: string, config: Record<string, unknown>, seed
   if (id === "flanker") return [...flankerPlans("practice", Number(config.practiceTrials), config, `${seed}-p`), ...flankerPlans("test", Number(config.testTrials), config, `${seed}-t`)];
   if (id === "simon") return [...simonPlans("practice", Number(config.practiceTrials), config, `${seed}-p`), ...simonPlans("test", Number(config.testTrials), config, `${seed}-t`)];
   if (id === "visual-search") return [...visualSearchPlans("practice", Number(config.practiceTrials), config, `${seed}-p`), ...visualSearchPlans("test", Number(config.testTrials), config, `${seed}-t`)];
+  if (id === "posner-cueing") return [...posnerPlans("practice", Number(config.practiceTrials), config, `${seed}-p`), ...posnerPlans("test", Number(config.testTrials), config, `${seed}-t`)];
+  if (id === "signal-detection") return [...signalDetectionPlans("practice", Number(config.practiceTrials), config, `${seed}-p`), ...signalDetectionPlans("test", Number(config.testTrials), config, `${seed}-t`)];
+  if (id === "n-back") return [...nBackPlans("practice", Number(config.practiceTrials), config, `${seed}-p`), ...nBackPlans("test", Number(config.testTrials), config, `${seed}-t`)];
+  if (id === "task-switching") return [...taskSwitchingPlans("practice", Number(config.practiceTrials), config, `${seed}-p`), ...taskSwitchingPlans("test", Number(config.testTrials), config, `${seed}-t`)];
   return [...rotationPlans("practice", Number(config.practiceTrials), config, `${seed}-p`), ...rotationPlans("test", Number(config.testTrials), config, `${seed}-t`)];
 }
 
@@ -269,6 +372,44 @@ function linearSlope(points: Array<{ x: number; y: number | null }>): number | n
   const meanY = mean(valid.map((point) => point.y)) ?? 0;
   const denominator = valid.reduce((sum, point) => sum + (point.x - meanX) ** 2, 0);
   return denominator ? valid.reduce((sum, point) => sum + (point.x - meanX) * (point.y - meanY), 0) / denominator : null;
+}
+
+function inverseNormalCdf(probability: number): number {
+  const p = Math.min(1 - 1e-7, Math.max(1e-7, probability));
+  const a = [-39.6968302866538, 220.946098424521, -275.928510446969, 138.357751867269, -30.6647980661472, 2.50662827745924];
+  const b = [-54.4760987982241, 161.585836858041, -155.698979859887, 66.8013118877197, -13.2806815528857];
+  const c = [-0.00778489400243029, -0.322396458041136, -2.40075827716184, -2.54973253934373, 4.37466414146497, 2.93816398269878];
+  const d = [0.00778469570904146, 0.32246712907004, 2.445134137143, 3.75440866190742];
+  if (p < 0.02425) {
+    const q = Math.sqrt(-2 * Math.log(p));
+    const numerator = (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]);
+    const denominator = ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    return numerator / denominator;
+  }
+  if (p > 0.97575) return -inverseNormalCdf(1 - p);
+  const q = p - 0.5; const r = q * q;
+  const numerator = (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q;
+  const denominator = ((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1;
+  return numerator / denominator;
+}
+
+function correctedRate(successes: number, total: number): number | null {
+  if (!total) return null;
+  if (successes <= 0) return 0.5 / total;
+  if (successes >= total) return 1 - 0.5 / total;
+  return successes / total;
+}
+
+function signalDetectionValues(rows: TrialRecord[]): { dprime: number | null; criterion: number | null; hitRate: number | null; falseAlarmRate: number | null } {
+  const signal = rows.filter((trial) => trial.data.signalPresent === true);
+  const noise = rows.filter((trial) => trial.data.signalPresent === false);
+  const hits = signal.filter((trial) => trial.response === "f").length;
+  const falseAlarms = noise.filter((trial) => trial.response === "f").length;
+  const hitRate = correctedRate(hits, signal.length);
+  const falseAlarmRate = correctedRate(falseAlarms, noise.length);
+  if (hitRate === null || falseAlarmRate === null) return { dprime: null, criterion: null, hitRate, falseAlarmRate };
+  const zHit = inverseNormalCdf(hitRate); const zFalseAlarm = inverseNormalCdf(falseAlarmRate);
+  return { dprime: zHit - zFalseAlarm, criterion: -0.5 * (zHit + zFalseAlarm), hitRate: hitRate * 100, falseAlarmRate: falseAlarmRate * 100 };
 }
 
 function byCondition(rows: TrialRecord[], rtRows: TrialRecord[] = rows): ConditionStats {
@@ -306,6 +447,17 @@ function metricValues(id: string, accuracyRows: TrialRecord[], conditions: Condi
     const slopeFor = (searchType: string) => linearSlope(Object.entries(conditions).filter(([condition]) => condition.startsWith(`${searchType}-`)).map(([condition, result]) => ({ x: Number(condition.split("-").at(-1)), y: result.medianRtMs })));
     return { feature_slope_ms_per_item: slopeFor("feature"), conjunction_slope_ms_per_item: slopeFor("conjunction"), accuracy };
   }
+  if (id === "posner-cueing") return { posner_cue_effect_ms: differenceMs(conditions.invalid, conditions.valid), accuracy };
+  if (id === "signal-detection") {
+    const values = signalDetectionValues(accuracyRows);
+    return { signal_detection_dprime: values.dprime, signal_detection_criterion: values.criterion, hit_rate: values.hitRate, false_alarm_rate: values.falseAlarmRate };
+  }
+  if (id === "n-back") {
+    const matchRows = accuracyRows.filter((trial) => trial.data.match === true);
+    const nonMatchRows = accuracyRows.filter((trial) => trial.data.match === false);
+    return { nback_load_cost_ms: differenceMs(conditions["2-back"], conditions["1-back"]), nback_hit_rate: matchRows.length ? (matchRows.filter((trial) => trial.response === "f").length / matchRows.length) * 100 : null, nback_false_alarm_rate: nonMatchRows.length ? (nonMatchRows.filter((trial) => trial.response === "f").length / nonMatchRows.length) * 100 : null };
+  }
+  if (id === "task-switching") return { task_switch_cost_ms: differenceMs(conditions.switch, conditions.repeat), accuracy };
   const slope = linearSlope(Object.entries(conditions).map(([condition, result]) => ({ x: Number(condition.split("-").at(-1)), y: result.medianRtMs })));
   return { rotation_slope_ms_per_degree: slope, accuracy };
 }

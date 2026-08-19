@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://psylab.example/experiments/n-back/parameters.schema.json",
+  "title": "N-back 参数",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "practiceTrials": { "type": "integer", "minimum": 8, "maximum": 24, "default": 8 },
+    "testTrials": { "type": "integer", "minimum": 24, "maximum": 120, "multipleOf": 4, "default": 48 },
+    "responseWindowMs": { "type": "integer", "minimum": 500, "maximum": 6000 }
+  },
+  "required": ["practiceTrials", "testTrials"]
+}

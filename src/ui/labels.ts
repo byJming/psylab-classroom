@@ -16,6 +16,15 @@ const conditionLabels: Record<string, string> = {
   "no-go": "No-Go · 方形",
   compatible: "位置相容",
   incompatible: "位置冲突"
+  ,valid: "有效线索"
+  ,invalid: "无效线索"
+  ,neutral: "中性线索"
+  ,signal: "有信号"
+  ,noise: "无信号"
+  ,repeat: "规则重复"
+  ,switch: "规则切换"
+  ,"1-back": "1-back"
+  ,"2-back": "2-back"
 };
 
 const flankerConditionLabels: Record<string, string> = { congruent: "方向一致", incongruent: "方向冲突" };
@@ -33,6 +42,6 @@ export function conditionLabel(experimentId: string, condition: string): string 
   return condition;
 }
 
-export const qualityFlagLabels: Record<string, string> = { interrupted: "中途退出", "focus-loss": "检测到页面失焦", "low-accuracy": "正确率偏低", "no-valid-test-trials": "有效正式 trial 不足", "debrief-completed": "已完成事后说明" };
+export const qualityFlagLabels: Record<string, string> = { interrupted: "中途退出", "focus-loss": "页面曾失焦", "low-accuracy": "正确响应较少", "no-valid-test-trials": "有效正式试次不足", "debrief-completed": "已完成事后说明" };
 
 export const viewportBucketLabels: Record<string, string> = { large: "大屏", medium: "中屏", small: "小屏", unknown: "未知" };

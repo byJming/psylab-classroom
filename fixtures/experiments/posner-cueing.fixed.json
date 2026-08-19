@@ -1,0 +1,6 @@
+{
+  "experimentId": "posner-cueing",
+  "seed": "fixed-posner-v1",
+  "config": { "practiceTrials": 6, "testTrials": 36 },
+  "expected": { "practiceCount": 6, "testCount": 36, "conditions": ["valid", "invalid", "neutral"] }
+}

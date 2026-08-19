@@ -12,13 +12,13 @@ page.on("pageerror", (error) => pageErrors.push(error.message));
 page.on("download", (download) => downloadNames.push(download.suggestedFilename()));
 
 await page.goto(baseUrl, { waitUntil: "networkidle" });
-await page.getByText("选择一个现象开始观察").waitFor();
+await page.getByText("选择一个现象开始探索").waitFor();
 for (const title of ["Simple RT 简单反应时", "颜色词 Stroop", "Go/No-Go 响应抑制", "Mental Rotation 心理旋转"]) await page.getByText(title).waitFor();
-await page.getByRole("button", { name: "查看 Simple RT 简单反应时" }).click();
-await page.getByRole("heading", { name: "理论与设计" }).waitFor();
+await page.locator(".experiment-card", { hasText: "Simple RT 简单反应时" }).click();
+await page.getByRole("heading", { name: "理论背景与机制" }).waitFor();
 if (await page.evaluate(() => window.scrollY) !== 0) throw new Error("route navigation must restore the page scroll position");
 await page.getByText("自变量").waitFor();
-await page.getByRole("button", { name: "← 返回实验馆" }).click();
+await page.getByRole("button", { name: "返回实验馆" }).click();
 
 const savedResult = JSON.parse(await readFile("fixtures/results/stroop-valid.json", "utf8"));
 await page.evaluate(async (result) => new Promise((resolve, reject) => { const request = indexedDB.open("psylab-local", 2); request.onupgradeneeded = () => { if (!request.result.objectStoreNames.contains("runs")) request.result.createObjectStore("runs"); if (!request.result.objectStoreNames.contains("results")) request.result.createObjectStore("results"); }; request.onerror = () => reject(request.error); request.onsuccess = () => { const tx = request.result.transaction("results", "readwrite"); tx.objectStore("results").put(result, "latest"); tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); }; }), savedResult);
@@ -37,7 +37,7 @@ await page.waitForTimeout(300);
 for (const expected of ["psylab-trials-", "psylab-summary-", "psylab-codebook-"]) if (!downloadNames.some((name) => name.startsWith(expected))) throw new Error(`missing export download: ${expected}`);
 await page.getByRole("button", { name: "体验馆", exact: true }).click();
 
-await page.getByRole("button", { name: "为课堂创建会话" }).click();
+await page.getByRole("button", { name: "课堂会话", exact: true }).click();
 await page.getByRole("heading", { name: "创建一个可复现会话" }).waitFor();
 await page.getByRole("button", { name: "生成会话配置" }).click();
 await page.getByText("配置已生成").waitFor();
@@ -60,7 +60,7 @@ await page.locator(".bundle-row summary").first().click();
 await page.locator(".bundle-detail").first().waitFor();
 
 await page.getByRole("button", { name: "体验馆", exact: true }).click();
-await page.getByRole("button", { name: /开始一次体验/ }).click();
+await page.getByRole("button", { name: /开始体验/ }).click();
 await page.getByRole("button", { name: "开始实验 →" }).click();
 // 预检可能瞬间完成，不能依赖瞬态的“正在检查”文案；由后续 check-row / preflight-complete 断言覆盖。
 const jsPsychCheck = page.locator(".check-row", { hasText: "jsPsych 时间线" });
@@ -70,7 +70,7 @@ if (await page.locator(".loader").count()) throw new Error("preflight loader mus
 await page.locator(".preflight-complete").waitFor();
 await page.getByRole("button", { name: "继续阅读说明 →" }).click();
 await page.getByText("匿名参与者代码（可选）").waitFor();
-if (await page.locator(".participant-field input").inputValue()) throw new Error("participant code must be optional");
+if (await page.locator("#participant-code-input").inputValue()) throw new Error("participant code must be optional");
 await page.getByRole("button", { name: "开始练习 →" }).click();
 await page.waitForTimeout(1300);
 await page.keyboard.press("Space");
@@ -114,10 +114,10 @@ await page.getByRole("heading", { name: "这是本次任务的结果" }).waitFor
 const timeoutContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
 const timeoutPage = await timeoutContext.newPage();
 await timeoutPage.goto(baseUrl, { waitUntil: "networkidle" });
-await timeoutPage.getByRole("button", { name: /开始一次体验/ }).click();
+await timeoutPage.getByRole("button", { name: /开始体验/ }).click();
 await timeoutPage.getByRole("button", { name: "开始实验 →" }).click();
 await timeoutPage.getByRole("button", { name: "继续阅读说明 →" }).click();
-await timeoutPage.locator(".participant-field input").fill("browser-timeout");
+await timeoutPage.locator("#participant-code-input").fill("browser-timeout");
 await timeoutPage.getByRole("button", { name: "开始练习 →" }).click();
 await timeoutPage.waitForTimeout(3900);
 await timeoutPage.getByText("2 / 3").waitFor();
@@ -127,7 +127,7 @@ const storageContext = await browser.newContext({ viewport: { width: 1440, heigh
 await storageContext.addInitScript(() => Object.defineProperty(window, "indexedDB", { configurable: true, value: undefined }));
 const storagePage = await storageContext.newPage();
 await storagePage.goto(baseUrl, { waitUntil: "networkidle" });
-await storagePage.getByRole("button", { name: /开始一次体验/ }).click();
+await storagePage.getByRole("button", { name: /开始体验/ }).click();
 await storagePage.getByRole("button", { name: "开始实验 →" }).click();
 await storagePage.getByText("IndexedDB 不可用，将使用临时内存，刷新可能丢失").waitFor();
 await storageContext.close();
@@ -136,7 +136,7 @@ const resourceContext = await browser.newContext({ viewport: { width: 1440, heig
 const resourcePage = await resourceContext.newPage();
 await resourcePage.goto(baseUrl, { waitUntil: "networkidle" });
 await resourceContext.setOffline(true);
-await resourcePage.getByRole("button", { name: /开始一次体验/ }).click();
+await resourcePage.getByRole("button", { name: /开始体验/ }).click();
 await resourcePage.getByRole("button", { name: "开始实验 →" }).click();
 await resourcePage.getByText("资源加载检查失败").waitFor();
 if (!await resourcePage.getByRole("button", { name: "继续阅读说明 →" }).isDisabled()) throw new Error("resource preload failure must block the run");

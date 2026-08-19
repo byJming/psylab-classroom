@@ -26,6 +26,12 @@
 - 新增指标 id（`choice_cost_ms`、`flanker_effect_ms`、`simon_effect_ms`、`feature_slope_ms_per_item`、`conjunction_slope_ms_per_item`）不改变已有实验的指标公式与清洗规则，`metricsVersion` 与 `analysisRulesVersion` 保持 `1.0.0`。
 - 新实验不影响旧结果包的导入：导入器按 experimentId 匹配 Definition，新增实验只扩展可接受范围，不修改已有校验路径。
 
+## N-back definitionVersion 1.1.0
+
+N-back 从逐试次混合 1-back/2-back 改为固定负荷区块：练习阶段 2 个短区块，正式阶段 4 个区块，1-back/2-back 各占一半。每个区块开始先显示一次规则提示和 n 个不要求作答的准备字母，计时响应窗内只呈现正式字母，避免把规则阅读混入反应时，也避免要求参与者对没有参照的首个字母作答。试次新增 `data.ruleCue` 和 `data.leadInLetters`，指标公式与清洗规则版本保持不变。
+
+旧 `definitionVersion: 1.0.0` 会话与结果不自动迁移，因为同一随机种子下的条件顺序和正确答案已经改变；应重新生成会话并运行。
+
 ## Result Bundle 1.1
 
 `psylab-result@1.1` 在 `experiment.config` 中增加经过规范化的实验参数快照。该对象必须通过当前 Definition 的 `configSchema`，其 SHA-256 必须等于 `experiment.configHash`；不保存匿名参与者代码、教师确认或其他会话元数据。它使独立导入器可以验证参数与 trial 结构，而不必依赖外部会话文件。

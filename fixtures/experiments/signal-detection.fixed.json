@@ -1,0 +1,6 @@
+{
+  "experimentId": "signal-detection",
+  "seed": "fixed-signal-detection-v1",
+  "config": { "practiceTrials": 8, "testTrials": 40 },
+  "expected": { "practiceCount": 8, "testCount": 40, "conditions": ["signal", "noise"] }
+}

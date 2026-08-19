@@ -8,6 +8,7 @@ export interface RunPolicy {
   version: string;
   publicCatalog: boolean;
   requiresTeacherAcknowledgement: boolean;
+  requiresParticipantAcknowledgement?: boolean;
   requiresDebrief: boolean;
   notes?: string[];
 }

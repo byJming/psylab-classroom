@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://psylab.example/experiments/posner-cueing/parameters.schema.json",
+  "title": "Posner 空间线索参数",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "practiceTrials": { "type": "integer", "minimum": 6, "maximum": 18, "default": 6 },
+    "testTrials": { "type": "integer", "minimum": 18, "maximum": 96, "multipleOf": 6, "default": 36 },
+    "responseWindowMs": { "type": "integer", "minimum": 500, "maximum": 6000 }
+  },
+  "required": ["practiceTrials", "testTrials"]
+}

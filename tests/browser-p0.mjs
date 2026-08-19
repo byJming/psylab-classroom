@@ -16,7 +16,8 @@ function canonicalize(value) {
 
 function manifestFor(experimentId, config, index) {
   const configHash = `sha256:${createHash("sha256").update(canonicalize(config)).digest("hex")}`;
-  return { format: "psylab-session", formatVersion: "1.0", experimentId, definitionVersion: "1.1.0", distributionTier: "open", runPolicyVersion: "1.0.0", config, configHash, sessionId: `p0-${index}-${experimentId}`, createdAt: "2026-08-18T00:00:00.000Z" };
+  const definitionVersion = ["posner-cueing", "signal-detection", "task-switching"].includes(experimentId) ? "1.0.0" : "1.1.0";
+  return { format: "psylab-session", formatVersion: "1.0", experimentId, definitionVersion, distributionTier: "open", runPolicyVersion: "1.0.0", config, configHash, sessionId: `p0-${index}-${experimentId}`, createdAt: "2026-08-18T00:00:00.000Z" };
 }
 
 // 回归：jsPsych 的 run() 只追加内容容器；实验过程中 DOM 节点数、页面高度与滚动位置不得随按键增长。
@@ -42,7 +43,11 @@ const cases = [
   { id: "choice-rt", config: { practiceTrials: 4, testTrials: 24 }, key: "f", delay: 350 },
   { id: "flanker", config: { practiceTrials: 4, testTrials: 24 }, key: "f", delay: 350 },
   { id: "simon", config: { practiceTrials: 4, testTrials: 24 }, key: "f", delay: 350 },
-  { id: "visual-search", config: { practiceTrials: 4, testTrials: 32 }, key: "j", delay: 400 }
+  { id: "visual-search", config: { practiceTrials: 4, testTrials: 32 }, key: "j", delay: 400 },
+  { id: "posner-cueing", config: { practiceTrials: 6, testTrials: 18 }, key: "f", delay: 400 },
+  { id: "signal-detection", config: { practiceTrials: 8, testTrials: 24 }, key: "f", delay: 400 },
+  { id: "n-back", config: { practiceTrials: 8, testTrials: 24 }, key: "f", delay: 400 },
+  { id: "task-switching", config: { practiceTrials: 8, testTrials: 24 }, key: "f", delay: 400 }
 ];
 
 for (const [index, item] of cases.entries()) {
@@ -51,9 +56,9 @@ for (const [index, item] of cases.entries()) {
   // 预检可能瞬间完成（模块已缓存时加载很快），不能依赖瞬态的“正在检查”文案；等待稳定的就绪按钮。
   await page.getByRole("button", { name: "继续阅读说明 →" }).waitFor();
   await page.getByRole("button", { name: "继续阅读说明 →" }).click();
-  await page.locator(".participant-field input").fill(`p0-${index + 1}`);
+  await page.locator("#participant-code-input").fill(`p0-${index + 1}`);
   await page.getByRole("button", { name: "开始练习 →" }).click();
-  await page.getByText("练习阶段").waitFor();
+  await page.getByText("练习阶段", { exact: true }).waitFor();
   // 按键节奏不再与试次一一对应（注视期按键会被记为提前反应），因此循环直到任务完成，
   // 途中自动点击“开始正式测试”过渡屏，并周期性断言 DOM/高度不增长。
   const deadline = Date.now() + 180000;
@@ -75,4 +80,4 @@ for (const [index, item] of cases.entries()) {
 
 if (pageErrors.length) throw new Error(`browser errors: ${pageErrors.join(" | ")}`);
 await browser.close();
-console.log("p0 browser closure passed: 8 experiments");
+console.log("p0 browser closure passed: 12 experiments");

@@ -9,6 +9,8 @@ import { buildResultBundle } from "../src/core/result";
 import { hasCompletedRequiredDebrief, validateRunManifest } from "../src/runtime/policy";
 import { canStartPreflight } from "../src/runtime/preflight";
 import { compileTimeline } from "../src/runtime/jspsychAdapter";
+import { presentationFor } from "../src/ui/experimentPresentation";
+import { posnerTargetMarkup } from "../src/experiments/stimuli";
 import type { ResultBundle, TrialPlan, TrialRecord } from "../src/types";
 import simpleFixture from "../fixtures/experiments/simple-rt.fixed.json";
 import stroopFixture from "../fixtures/experiments/stroop-color-word.fixed.json";
@@ -18,6 +20,7 @@ import choiceFixture from "../fixtures/experiments/choice-rt.fixed.json";
 import flankerFixture from "../fixtures/experiments/flanker.fixed.json";
 import simonFixture from "../fixtures/experiments/simon.fixed.json";
 import searchFixture from "../fixtures/experiments/visual-search.fixed.json";
+import nBackFixture from "../fixtures/experiments/n-back.fixed.json";
 import simpleParameters from "../experiments/simple-rt/parameters.schema.json";
 import stroopParameters from "../experiments/stroop-color-word/parameters.schema.json";
 import flankerParameters from "../experiments/flanker/parameters.schema.json";
@@ -40,7 +43,7 @@ describe("契约与确定性", () => {
   it("规范化哈希忽略对象键顺序", async () => { expect(canonicalize({ b: 2, a: 1 })).toBe(canonicalize({ a: 1, b: 2 })); expect(await sha256({ b: 2, a: 1 })).toBe(await sha256({ a: 1, b: 2 })); });
   it("普通 HTTP 静态服务器的 SHA-256 fallback 与标准向量一致", () => { expect(sha256Fallback(new TextEncoder().encode("abc"))).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"); });
   it("固定种子生成稳定 trial 数和顺序", () => { const first = generateTrials("stroop-color-word", defaultConfig("stroop-color-word"), "seed"); const second = generateTrials("stroop-color-word", defaultConfig("stroop-color-word"), "seed"); expect(first).toEqual(second); expect(first.filter((plan) => plan.phase === "test")).toHaveLength(24); });
-  it("固定 fixtures 的 Definition/Runner 结构与预期一致", () => { for (const fixture of [simpleFixture, stroopFixture, goNoGoFixture, rotationFixture, choiceFixture, flankerFixture, simonFixture, searchFixture]) { const plans = generateTrials(fixture.experimentId, fixture.config, fixture.seed); expect(plans.filter((plan) => plan.phase === "practice")).toHaveLength(fixture.expected.practiceCount); expect(plans.filter((plan) => plan.phase === "test")).toHaveLength(fixture.expected.testCount); expect(new Set(plans.map((plan) => plan.condition)).size).toBeGreaterThan(0); } });
+  it("固定 fixtures 的 Definition/Runner 结构与预期一致", () => { for (const fixture of [simpleFixture, stroopFixture, goNoGoFixture, rotationFixture, choiceFixture, flankerFixture, simonFixture, searchFixture, nBackFixture]) { const plans = generateTrials(fixture.experimentId, fixture.config, fixture.seed); expect(plans.filter((plan) => plan.phase === "practice")).toHaveLength(fixture.expected.practiceCount); expect(plans.filter((plan) => plan.phase === "test")).toHaveLength(fixture.expected.testCount); expect(new Set(plans.map((plan) => plan.condition)).size).toBeGreaterThan(0); } });
   it("心理旋转的同形与镜像条件呈现稳定的程序化几何刺激", () => { const plans = generateTrials("mental-rotation", rotationFixture.config, rotationFixture.seed); expect(new Set(plans.map((plan) => plan.stimulus))).toEqual(new Set(["geometry"])); expect(plans.filter((plan) => plan.condition.startsWith("same-")).every((plan) => plan.data.stimulusType === "corner-blocks" && plan.data.same === true)).toBe(true); expect(plans.filter((plan) => plan.condition.startsWith("mirror-")).every((plan) => plan.data.stimulusType === "corner-blocks" && plan.data.same === false)).toBe(true); });
   it("八个官方实验都生成可解释的练习与正式 trial", () => { for (const definition of definitions) { const plans = generateTrials(definition.experimentId, defaultConfig(definition.experimentId), "fixed-fixture-seed"); expect(plans.some((plan) => plan.phase === "practice")).toBe(true); expect(plans.some((plan) => plan.phase === "test")).toBe(true); expect(plans.every((plan) => plan.stimulusId.length > 0)).toBe(true); } });
   it("公开 Runner 对 open、guided 和 controlled 发布策略执行对应门禁", async () => {
@@ -159,6 +162,70 @@ describe("契约与确定性", () => {
     expect(flankerTimeline.every((item) => Array.isArray(item.choices) && (item.choices as string[]).join("|") === "f|j")).toBe(true);
     expect(flankerTimeline[0].response_ends_trial).toBe(false);
   });
+  it("新增专业范式生成结构稳定且携带专属字段", () => {
+    const posner = generateTrials("posner-cueing", defaultConfig("posner-cueing"), "posner-test").filter((plan) => plan.phase === "test");
+    expect(new Set(posner.map((plan) => plan.condition))).toEqual(new Set(["valid", "invalid", "neutral"]));
+    expect(posner.every((plan) => plan.data.cueMs === 300 && plan.data.stimulusType === "posner-target")).toBe(true);
+    expect(posner.filter((plan) => plan.condition === "valid").every((plan) => plan.data.cuePosition === plan.data.position)).toBe(true);
+    expect(posner.filter((plan) => plan.condition === "invalid").every((plan) => plan.data.cuePosition !== plan.data.position)).toBe(true);
+    expect(posnerTargetMarkup("left")).toContain("posner-target-dot");
+    const posnerTimeline = compileTimeline(posner.slice(0, 1));
+    expect(posnerTimeline).toHaveLength(3);
+    expect(posnerTimeline[2].stimulus).toContain("posner-target-dot");
+    const signal = generateTrials("signal-detection", defaultConfig("signal-detection"), "signal-test").filter((plan) => plan.phase === "test");
+    expect(signal.filter((plan) => plan.data.signalPresent === true)).toHaveLength(20);
+    expect(signal.filter((plan) => plan.data.signalPresent === false)).toHaveLength(20);
+    const nback = generateTrials("n-back", defaultConfig("n-back"), "nback-test").filter((plan) => plan.phase === "test");
+    for (const blockIndex of new Set(nback.map((plan) => Number(plan.data.blockIndex)))) {
+      const block = nback.filter((plan) => plan.data.blockIndex === blockIndex);
+      const n = Number(block[0].data.n);
+      const sequence = String(block[0].data.leadInLetters).split("|");
+      for (const plan of block) {
+        const previous = sequence[sequence.length - n];
+        expect(plan.data.match).toBe(plan.stimulus === previous);
+        sequence.push(plan.stimulus);
+      }
+    }
+    const switching = generateTrials("task-switching", defaultConfig("task-switching"), "switch-test").filter((plan) => plan.phase === "test");
+    expect(new Set(switching.map((plan) => plan.condition))).toEqual(new Set(["repeat", "switch"]));
+    expect(switching.every((plan) => ["color", "shape"].includes(String(plan.data.rule)))).toBe(true);
+  });
+  it("N-back 说明明确动作，规则仅在每个区块开始提示", () => {
+    const guide = presentationFor("n-back").guide;
+    expect(guide.steps).toHaveLength(3);
+    expect(guide.steps[0].description).toContain("1-back");
+    expect(guide.responses.map((response) => response.key)).toEqual(["F", "J"]);
+    expect(guide.example?.rule).toBe("本组规则：2-back");
+    expect(guide.example?.compareIndex).toBe(0);
+
+    const plans = generateTrials("n-back", nBackFixture.config, nBackFixture.seed).filter((plan) => plan.phase === "test");
+    const blocks = [...new Set(plans.map((plan) => Number(plan.data.blockIndex)))].map((blockIndex) => plans.filter((plan) => plan.data.blockIndex === blockIndex));
+    expect(blocks).toHaveLength(4);
+    expect(blocks.every((block) => block.length === 12)).toBe(true);
+    expect(blocks.every((block) => block.every((plan) => plan.data.n === block[0].data.n))).toBe(true);
+    expect(plans.filter((plan) => plan.data.ruleCue === true)).toHaveLength(4);
+    expect(plans.filter((plan) => plan.condition === "1-back")).toHaveLength(24);
+    expect(plans.filter((plan) => plan.condition === "2-back")).toHaveLength(24);
+    expect(plans.filter((plan) => plan.data.ruleCue === true).every((plan) => String(plan.data.leadInLetters).split("|").filter(Boolean).length === Number(plan.data.n))).toBe(true);
+
+    const timeline = compileTimeline(plans);
+    const cues = timeline.filter((trial) => trial.data.role === "cue");
+    const responses = timeline.filter((trial) => trial.data.role === "response");
+    expect(cues).toHaveLength(10);
+    expect(cues.filter((trial) => typeof trial.stimulus === "string" && trial.stimulus.includes("接下来一组"))).toHaveLength(4);
+    expect(cues.filter((trial) => typeof trial.stimulus === "string" && trial.stimulus.includes("准备阶段，不需要按键"))).toHaveLength(6);
+    expect(responses).toHaveLength(plans.length);
+    expect(responses.every((trial) => typeof trial.stimulus === "string" && !trial.stimulus.includes("本题：") && !trial.stimulus.includes("本组规则") && !trial.stimulus.includes("相同 F"))).toBe(true);
+  });
+  it("每个公开实验的运行说明都有可执行步骤和按键对照", () => {
+    for (const definition of definitions) {
+      const guide = presentationFor(definition.experimentId).guide;
+      expect(guide.steps).toHaveLength(3);
+      expect(guide.steps.every((step) => step.title.length > 0 && step.description.length > 0)).toBe(true);
+      expect(guide.responses.length).toBeGreaterThan(0);
+    }
+    expect(presentationFor("choice-rt").guide.responses.map((response) => `${response.key}:${response.action}`)).toEqual(["F:红色", "G:绿色", "J:蓝色", "K:紫色"]);
+  });
   it("预检只允许本地存储降级，阻止键盘、桌面视口、可见性和资源失败", () => {
     const healthy = [{ id: "keyboard", label: "键盘", ok: true, detail: "" }, { id: "viewport", label: "视口", ok: true, detail: "" }, { id: "visibility", label: "可见", ok: true, detail: "" }, { id: "resource", label: "资源", ok: true, detail: "" }, { id: "storage", label: "存储", ok: false, detail: "" }];
     expect(canStartPreflight(healthy)).toBe(true);
@@ -189,6 +256,23 @@ describe("Metrics", () => {
     expect(search.cleaned.feature_slope_ms_per_item).toBe(25);
     expect(search.cleaned.conjunction_slope_ms_per_item).toBe(100);
     expect(search.cleaned.accuracy).toBe(100);
+  });
+  it("新增范式的指标输出稳定", () => {
+    const posner = calculateMetrics("posner-cueing", [trial({ condition: "valid", rtMs: 500 }), trial({ trialIndex: 1, condition: "invalid", rtMs: 650 })]);
+    expect(posner.cleaned.posner_cue_effect_ms).toBe(150);
+    const signal = calculateMetrics("signal-detection", [
+      trial({ condition: "signal", response: "f", correct: true, data: { signalPresent: true } }),
+      trial({ trialIndex: 1, condition: "signal", response: "j", correct: false, data: { signalPresent: true } }),
+      trial({ trialIndex: 2, condition: "noise", response: "f", correct: false, data: { signalPresent: false } }),
+      trial({ trialIndex: 3, condition: "noise", response: "j", correct: true, data: { signalPresent: false } })
+    ]);
+    expect(signal.cleaned.signal_detection_dprime).toBeCloseTo(0, 6);
+    expect(signal.cleaned.hit_rate).toBe(50);
+    expect(signal.cleaned.false_alarm_rate).toBe(50);
+    const nback = calculateMetrics("n-back", [trial({ condition: "1-back", rtMs: 500, response: "f", correct: true, data: { match: true } }), trial({ trialIndex: 1, condition: "2-back", rtMs: 700, response: "f", correct: true, data: { match: true } })]);
+    expect(nback.cleaned.nback_load_cost_ms).toBe(200);
+    const switching = calculateMetrics("task-switching", [trial({ condition: "repeat", rtMs: 500 }), trial({ trialIndex: 1, condition: "switch", rtMs: 650 })]);
+    expect(switching.cleaned.task_switch_cost_ms).toBe(150);
   });
   it("每个官方实验 Metrics 对正常、全错、无响应和失焦数据保持稳定", () => { for (const definition of definitions) { const normal = trial({ condition: definition.experimentId === "go-no-go" ? "go" : "baseline" }); const wrong = trial({ trialIndex: 1, correct: false, response: "x", excluded: true, exclusionReasons: ["incorrect"] }); const missing = trial({ trialIndex: 2, response: null, correct: null, rtMs: null, excluded: true, exclusionReasons: ["no-response"], focusLostBeforeResponse: true }); const result = calculateMetrics(definition.experimentId, [normal, wrong, missing]); expect(result.metricsVersion).toBe("1.0.0"); expect(result.excluded).toHaveLength(2); } });
 });

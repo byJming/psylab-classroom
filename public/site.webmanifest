@@ -1,0 +1,14 @@
+{
+  "name": "PsyLab 心理实验平台",
+  "short_name": "PsyLab",
+  "description": "可复现、可解释、默认本地保存的中文心理学实验平台",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f5f0",
+  "theme_color": "#26343a",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

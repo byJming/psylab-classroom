@@ -1,7 +1,7 @@
 import type { TrialPlan } from "../types";
-import { choiceCircleMarkup, flankerArrowsMarkup, mentalRotationSvgMarkup, simonCircleMarkup, visualSearchSvgMarkup } from "../experiments/stimuli";
+import { choiceCircleMarkup, flankerArrowsMarkup, mentalRotationSvgMarkup, posnerCueMarkup, posnerTargetMarkup, signalDetectionMarkup, simonCircleMarkup, taskSwitchingMarkup, visualSearchSvgMarkup } from "../experiments/stimuli";
 
-export type JsPsychTrialRole = "delay" | "response";
+export type JsPsychTrialRole = "delay" | "cue" | "response";
 
 /** jsPsych 支持在试次开始时求值的函数参数；用于提前反应后把响应窗替换为即时反馈。 */
 export type DynamicParameter<T> = T | (() => T);
@@ -38,6 +38,15 @@ function safeColor(value: unknown): string {
   return /^#[0-9a-f]{6}$/i.test(color) ? color : "#1f2933";
 }
 
+function nBackRuleMarkup(value: unknown): string {
+  const n = Number(value) === 2 ? 2 : 1;
+  return `<div class="n-back-rule-cue" role="status"><span>接下来一组</span><strong>${n}-back</strong><small>${n === 1 ? "与上一个字母比较" : "与前两个字母比较"} · 相同 F / 不同 J</small></div>`;
+}
+
+function nBackLeadInMarkup(letter: string, index: number, total: number): string {
+  return `<div class="n-back-lead-in"><span>先记住 ${index + 1} / ${total}</span><strong>${escapeHtml(letter)}</strong><small>准备阶段，不需要按键</small></div>`;
+}
+
 function responseKeys(plan: TrialPlan): string[] {
   if (plan.data.targetType === "go" || plan.data.targetType === "no-go") return [" "];
   // 选择反应等多键范式把允许按键以 "f|g|j|k" 形式写入试次数据，随结果包导出可审计。
@@ -53,6 +62,10 @@ function stimulusMarkup(plan: TrialPlan): string {
   if (plan.data.stimulusType === "flanker-arrows") return flankerArrowsMarkup(plan.data.direction === "left", plan.data.flankerCompatible === true);
   if (plan.data.stimulusType === "simon-circle") return simonCircleMarkup(plan.data.position === "left", plan.data.color);
   if (plan.data.stimulusType === "search-display") return visualSearchSvgMarkup(plan.stimulusId, String(plan.data.searchType ?? "feature"), Number(plan.data.setSize ?? 4), plan.data.targetPresent === true);
+  if (plan.data.stimulusType === "posner-target") return posnerTargetMarkup(String(plan.data.position ?? "left"));
+  if (plan.data.stimulusType === "signal-detection") return signalDetectionMarkup(plan.data.signalPresent === true);
+  if (plan.data.stimulusType === "n-back") return `<div class="n-back-letter" aria-label="字母 ${escapeHtml(plan.stimulus)}">${escapeHtml(plan.stimulus)}</div>`;
+  if (plan.data.stimulusType === "task-switching") return taskSwitchingMarkup(String(plan.data.rule ?? "color"), String(plan.data.colorName ?? "red"), String(plan.data.shape ?? "circle"));
   if (plan.data.targetType === "go" || plan.data.targetType === "no-go") return `<div class="measured-shape measured-go-no-go ${plan.data.targetType === "go" ? "go" : "no-go"}" aria-hidden="true"></div>`;
   if (plan.data.color && !plan.data.stimulusType) return `<div class="measured-word" style="color:${safeColor(plan.data.color)}">${escapeHtml(plan.stimulus)}</div>`;
   if (plan.stimulus === "●") return `<div class="measured-shape measured-simple-rt" aria-hidden="true"></div>`;
@@ -80,8 +93,13 @@ export function compileTimeline(plans: TrialPlan[], planIndexes?: number[], opti
     const sensitive = plan.data.anticipationSensitive === true;
     const earlyResponse = () => options.earlyResponses?.has(planIndex) === true;
     const commonData = { phase: plan.phase, condition: plan.condition, stimulusId: plan.stimulusId, ...plan.data, planIndex };
+    const cueMs = Math.max(0, Number(plan.data.cueMs ?? 0));
+    const leadInLetters = plan.data.ruleCue === true && typeof plan.data.leadInLetters === "string" ? plan.data.leadInLetters.split("|").filter(Boolean) : [];
     return [
+      ...(plan.data.ruleCue === true ? [{ type: "html-keyboard-response" as const, stimulus: nBackRuleMarkup(plan.data.n), choices: [] as string[], trial_duration: 1600, response_ends_trial: false, post_trial_gap: 0, data: { ...commonData, role: "cue" as const } }] : []),
+      ...leadInLetters.map((letter, leadInIndex) => ({ type: "html-keyboard-response" as const, stimulus: nBackLeadInMarkup(letter, leadInIndex, leadInLetters.length), choices: [] as string[], trial_duration: 900, response_ends_trial: false, post_trial_gap: 100, data: { ...commonData, role: "cue" as const } })),
       { type: "html-keyboard-response", stimulus: FIXATION_MARKUP, choices, trial_duration: fixationMs, response_ends_trial: sensitive, post_trial_gap: 0, data: { ...commonData, role: "delay" as const } },
+      ...(cueMs > 0 ? [{ type: "html-keyboard-response" as const, stimulus: posnerCueMarkup(String(plan.data.cueType ?? "neutral"), String(plan.data.cuePosition ?? "")), choices: [] as string[], trial_duration: cueMs, response_ends_trial: false, post_trial_gap: 0, data: { ...commonData, role: "cue" as const } }] : []),
       {
         type: "html-keyboard-response",
         stimulus: sensitive ? () => (earlyResponse() ? EARLY_RESPONSE_MARKUP : stimulusMarkup(plan)) : stimulusMarkup(plan),

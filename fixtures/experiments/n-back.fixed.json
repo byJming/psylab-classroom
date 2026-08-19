@@ -1,0 +1,6 @@
+{
+  "experimentId": "n-back",
+  "seed": "fixed-n-back-v1",
+  "config": { "practiceTrials": 8, "testTrials": 48 },
+  "expected": { "practiceCount": 8, "testCount": 48, "conditions": ["1-back", "2-back"] }
+}

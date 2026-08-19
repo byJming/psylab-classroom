@@ -4,6 +4,7 @@ import { compileTimeline, createJsPsychRuntime } from "../runtime/jspsychAdapter
 
 interface JsPsychStageProps {
   experimentId: string;
+  experimentTitle: string;
   stage: "practice" | "test";
   plans: TrialPlan[];
   startIndex: number;
@@ -22,7 +23,7 @@ function responseForPlan(_plan: TrialPlan, actualResponse: string | null, antici
   return anticipationResponse ?? actualResponse;
 }
 
-export function JsPsychStage({ experimentId, stage, plans, startIndex, focusLossCount, baseTrials, onTrial, onComplete, onError, onExit }: JsPsychStageProps) {
+export function JsPsychStage({ experimentId, experimentTitle, stage, plans, startIndex, focusLossCount, baseTrials, onTrial, onComplete, onError, onExit }: JsPsychStageProps) {
   const displayRef = useRef<HTMLDivElement>(null);
   const focusLossRef = useRef(focusLossCount);
   const startedRef = useRef(false);
@@ -62,6 +63,7 @@ export function JsPsychStage({ experimentId, stage, plans, startIndex, focusLoss
         if (response !== null) earlyResponses.add(planIndex);
         return;
       }
+      if (data.role === "cue") return;
       const item = stagePlans.find((candidate) => candidate.index === planIndex);
       if (!item) return;
       const plan = item.plan;
@@ -125,7 +127,7 @@ export function JsPsychStage({ experimentId, stage, plans, startIndex, focusLoss
   const stageTotal = Math.max(1, plans.filter((plan) => plan.phase === stage).length);
   const progress = Math.min(completedCount + 1, stageTotal);
   return <div className={`runner-page runner-${experimentId}`}>
-    <div className="runner-progress"><span>{stage === "practice" ? "练习阶段" : "正式阶段"}</span><span>{progress} / {stageTotal}</span></div>
+    <div className="runner-progress"><div><strong>{experimentTitle}</strong><span>{stage === "practice" ? "练习阶段" : "正式阶段"}</span></div><div className="trial-progress"><span>{progress} / {stageTotal}</span><div role="progressbar" aria-label={stage === "practice" ? "练习进度" : "正式进度"} aria-valuemin={1} aria-valuemax={stageTotal} aria-valuenow={progress}><i style={{ width: `${(progress / stageTotal) * 100}%` }} /></div></div></div>
     <div className="stage-wrap">
       <div ref={displayRef} className="jspsych-stage" aria-live="off" />
       {feedback && <div className={`stage-feedback ${feedback.kind}`} key={feedback.id} role="status">{feedbackCopy[feedback.kind]}</div>}

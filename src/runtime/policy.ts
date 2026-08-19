@@ -3,7 +3,7 @@ import { validateConfig, validateSession } from "../core/schema";
 import type { ExperimentDefinition, ResultBundle, SessionManifest } from "../types";
 
 export function experimentConfig(config: Record<string, unknown>): Record<string, unknown> {
-  const nonExperimentKeys = new Set(["participantCode", "teacherAcknowledged", "preset", "language"]);
+  const nonExperimentKeys = new Set(["participantCode", "participantAcknowledged", "teacherAcknowledged", "preset", "language"]);
   return Object.fromEntries(Object.entries(config).filter(([key]) => !nonExperimentKeys.has(key)));
 }
 

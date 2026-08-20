@@ -70,13 +70,14 @@ body:has(.app-shell.run-mode .runner-instructions) { overflow: auto; }
   display: grid;
   place-items: center;
   border-radius: 8px;
-  background: linear-gradient(135deg, #1f2a30, #2d454a);
+  background: var(--primary-accent);
   color: #fff;
-  font-family: Georgia, serif;
-  font-size: 19px;
-  font-weight: bold;
+  font-size: 21px;
+  font-weight: 800;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 }
+.brand-name { display: inline-flex; align-items:baseline; gap: 8px; }
+.brand-name small { color: var(--ink-muted); font-size: 11px; font-weight: 650; letter-spacing: 0; }
 .topbar nav {
   display: flex;
   align-self: stretch;
@@ -1394,6 +1395,12 @@ body:has(.app-shell.run-mode .runner-instructions) { overflow: auto; }
 }
 
 @media (max-width: 640px) {
+  .brand { flex: none; white-space: nowrap; }
+  .brand-name small { display: none; }
+  .topbar nav { gap: 0; min-width: 0; }
+  .topbar nav button { padding: 0 6px; font-size: 12px; white-space: nowrap; }
+  .topbar-github { width: 38px; padding: 0; justify-content: center; }
+  .topbar-github span { display: none; }
   .page {
     padding: 24px 18px 56px;
   }
@@ -1401,10 +1408,6 @@ body:has(.app-shell.run-mode .runner-instructions) { overflow: auto; }
     height: 62px;
     padding: 0 16px;
     gap: 14px;
-  }
-  .topbar nav button {
-    padding: 0 10px;
-    font-size: 13px;
   }
   .brand {
     font-size: 18px;
